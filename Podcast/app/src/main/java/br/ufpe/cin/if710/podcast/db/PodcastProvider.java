@@ -1,12 +1,24 @@
 package br.ufpe.cin.if710.podcast.db;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Log;
 
 public class PodcastProvider extends ContentProvider {
+
+    private static PodcastDBHelper mPodcastDBHelper;
+    private Context mContext;
+    private final SQLiteDatabase db = this.mPodcastDBHelper.getWritableDatabase();
+
+
+
     public PodcastProvider() {
+
     }
 
     @Override
@@ -25,12 +37,32 @@ public class PodcastProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues values) {
         // TODO: Implement this to handle requests to insert a new row.
-        throw new UnsupportedOperationException("Not yet implemented");
+        final SQLiteDatabase db = this.mPodcastDBHelper.getWritableDatabase();
+
+        Uri returnUri;
+        // atualizando a entrada na tabela caso já exista o podcast
+        Long id = db.replace(PodcastProviderContract.EPISODE_TABLE, null, values);
+
+        if (id > 0) {
+            //inserção feita com sucesso
+            returnUri = ContentUris.withAppendedId(PodcastProviderContract.EPISODE_LIST_URI, id);
+            Log.d("PodcastProvider", returnUri.toString());
+        } else {
+            throw new android.database.SQLException("falha na inserção em: " + uri);
+        }
+
+        getContext().getContentResolver().notifyChange(uri, null);
+
+        return returnUri;
+
+        //throw new UnsupportedOperationException("Not yet implemented");
     }
 
     @Override
     public boolean onCreate() {
         // TODO: Implement this to initialize your content provider on startup.
+        mContext = this.getContext();
+        mPodcastDBHelper = PodcastDBHelper.getInstance(mContext);
         return false;
     }
 
