@@ -105,7 +105,6 @@ public class MainActivity extends Activity {
     private void insertDataDb(List<ItemFeed> itemList){
         for (ItemFeed item : itemList) {
             ContentValues content = new ContentValues();
-
             content.put(PodcastDBHelper.EPISODE_TITLE, item.getTitle());
             content.put(PodcastDBHelper.EPISODE_DATE, item.getPubDate());
             content.put(PodcastDBHelper.EPISODE_LINK, item.getLink());

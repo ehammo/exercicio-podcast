@@ -11,16 +11,15 @@ import android.util.Log;
 
 public class PodcastProvider extends ContentProvider {
 
-    private static PodcastDBHelper mPodcastDBHelper;
+    private PodcastDBHelper mPodcastDBHelper;
     private Context mContext;
-    private final SQLiteDatabase db;
 
     public PodcastProvider() {
-        db = this.mPodcastDBHelper.getWritableDatabase();
     }
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
+        final SQLiteDatabase db = this.mPodcastDBHelper.getWritableDatabase();
 
         int numDeleted = db.delete(PodcastProviderContract.EPISODE_TABLE,
                 selection,
@@ -30,6 +29,7 @@ public class PodcastProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(uri, null);
         }
 
+        db.close();
         return numDeleted;
     }
 
@@ -43,18 +43,34 @@ public class PodcastProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues values) {
         Uri returnUri;
+        final SQLiteDatabase db = this.mPodcastDBHelper.getWritableDatabase();
 
-        Long id = db.insertOrThrow(PodcastProviderContract.EPISODE_TABLE, null, values);
+        String link = PodcastProviderContract.EPISODE_LINK;
+        Log.d("insert",values.getAsString(link));
+        if(values.getAsString(link)!=null) {
+            long id = db.update(PodcastProviderContract.EPISODE_TABLE,
+                    values,
+                    link + "= \"" + values.getAsString(link) + "\"",
+                    null);
 
-        if (id > 0) {
-            returnUri = ContentUris.withAppendedId(PodcastProviderContract.EPISODE_LIST_URI, id);
-            Log.d("PodcastProvider", returnUri.toString());
-        } else {
+            if (id == 0) {
+                Log.d("PodcastProvider", "CommonInsert");
+                id = db.insert(PodcastProviderContract.EPISODE_TABLE,
+                        null,
+                        values);
+            }
+
+            if (id > 0) {
+                returnUri = ContentUris.withAppendedId(PodcastProviderContract.EPISODE_LIST_URI, id);
+                Log.d("PodcastProvider", returnUri.toString());
+            } else {
+                throw new android.database.SQLException("falha na inserção em: " + uri);
+            }
+        }else{
             throw new android.database.SQLException("falha na inserção em: " + uri);
         }
-
         getContext().getContentResolver().notifyChange(uri, null);
-
+        db.close();
         return returnUri;
     }
 
@@ -63,7 +79,7 @@ public class PodcastProvider extends ContentProvider {
         // TODO: Implement this to initialize your content provider on startup.
         mContext = this.getContext();
         mPodcastDBHelper = PodcastDBHelper.getInstance(mContext);
-        return false;
+        return true;
     }
 
     @Override
@@ -80,7 +96,7 @@ public class PodcastProvider extends ContentProvider {
                 sortOrder);
 
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
-
+        db.close();
         return cursor;
     }
 
@@ -98,6 +114,7 @@ public class PodcastProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(uri, null);
        }
 
-        return numUpdated;
+       db.close();
+       return numUpdated;
     }
 }
