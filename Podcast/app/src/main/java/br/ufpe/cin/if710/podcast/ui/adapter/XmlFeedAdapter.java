@@ -13,6 +13,10 @@ import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 
     int linkResource;
+    public static final String TITLE_EXTRA = "Title";
+    public static final String PUBDATE_EXTRA = "PubDate";
+    public static final String DESCRIPTION_EXTRA = "Description";
+    public static final String DOWNLOAD_LINK_EXTRA = "DownloadLink";
 
     public XmlFeedAdapter(Context context, int resource, List<ItemFeed> objects) {
         super(context, resource, objects);
@@ -63,8 +67,10 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
+        final ItemFeed item = getItem(position);
         holder.item_title.setText(getItem(position).getTitle());
         holder.item_date.setText(getItem(position).getPubDate());
+
         return convertView;
     }
 }

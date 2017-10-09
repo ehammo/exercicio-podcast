@@ -5,4 +5,10 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <style name="TitleFont"
+        parent="@android:style/TextAppearance.Large">
+        <item name="android:textColor">#dc7800</item>
+        <item name="android:typeface">monospace</item>
+    </style>
+
 </resources>

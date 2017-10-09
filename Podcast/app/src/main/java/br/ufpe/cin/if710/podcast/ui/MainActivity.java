@@ -1,13 +1,16 @@
 package br.ufpe.cin.if710.podcast.ui;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -40,13 +43,29 @@ public class MainActivity extends Activity {
     //TODO teste com outros links de podcast
 
     private ListView items;
-
+    private final String[] permissions = {
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         items = (ListView) findViewById(R.id.items);
+        verifyStoragePermissions(this, permissions);
+        items.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                XmlFeedAdapter xmlFeedAdapter = (XmlFeedAdapter) adapterView.getAdapter();
+                ItemFeed item = xmlFeedAdapter.getItem(i);
+                Intent intent = new Intent(getApplicationContext(), EpisodeDetailActivity.class);
+                intent.putExtra(PodcastProviderContract.TITLE, item.getTitle());
+                intent.putExtra(PodcastProviderContract.EPISODE_LINK, item.getLink());
+                intent.putExtra(PodcastProviderContract.DESCRIPTION, item.getDescription());
+                intent.putExtra(PodcastProviderContract.DOWNLOAD_LINK, item.getDownloadLink());
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -135,17 +154,7 @@ public class MainActivity extends Activity {
             //atualizar o list view
             items.setAdapter(adapter);
             items.setTextFilterEnabled(true);
-            /*
-            items.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    XmlFeedAdapter adapter = (XmlFeedAdapter) parent.getAdapter();
-                    ItemFeed item = adapter.getItem(position);
-                    String msg = item.getTitle() + " " + item.getLink();
-                    Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
-                }
-            });
-            /**/
+
         }
     }
 
@@ -172,5 +181,22 @@ public class MainActivity extends Activity {
         return rssFeed;
     }
 
+    public static void verifyStoragePermissions(Activity activity, String[] per) {
+        // Check if we have write permission
+        for (int i = 0; i < per.length; i++) {
+            int permission = ActivityCompat.checkSelfPermission(activity, per[i]);
 
+            if (permission != PackageManager.PERMISSION_GRANTED) {
+                // We don't have permission so prompt the user
+                ActivityCompat.requestPermissions(
+                        activity,
+                        per,
+                        1
+                );
+                i = per.length;
+            }
+
+        }
+
+    }
 }
