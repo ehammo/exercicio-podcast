@@ -2,21 +2,21 @@ package br.ufpe.cin.if710.podcast.ui.adapter;
 
 import java.util.List;
 import android.content.Context;
+import android.content.Intent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import br.ufpe.cin.if710.podcast.R;
+import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
+import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
 
 public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 
     int linkResource;
-    public static final String TITLE_EXTRA = "Title";
-    public static final String PUBDATE_EXTRA = "PubDate";
-    public static final String DESCRIPTION_EXTRA = "Description";
-    public static final String DOWNLOAD_LINK_EXTRA = "DownloadLink";
 
     public XmlFeedAdapter(Context context, int resource, List<ItemFeed> objects) {
         super(context, resource, objects);
@@ -70,6 +70,21 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
         final ItemFeed item = getItem(position);
         holder.item_title.setText(getItem(position).getTitle());
         holder.item_date.setText(getItem(position).getPubDate());
+
+        holder.item_title.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                Context context = getContext();
+
+                Intent intent = new Intent(context, EpisodeDetailActivity.class);
+                intent.putExtra(PodcastProviderContract.TITLE, item.getTitle());
+                intent.putExtra(PodcastProviderContract.EPISODE_LINK, item.getLink());
+                intent.putExtra(PodcastProviderContract.DESCRIPTION, item.getDescription());
+                intent.putExtra(PodcastProviderContract.DOWNLOAD_LINK, item.getDownloadLink());
+                context.startActivity(intent);
+            }
+        });
 
         return convertView;
     }
