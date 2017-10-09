@@ -9,7 +9,7 @@ public class PodcastDBHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "podcasts";
     public static final String DATABASE_TABLE = "episodes";
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
 
     private PodcastDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DB_VERSION);
@@ -41,7 +41,7 @@ public class PodcastDBHelper extends SQLiteOpenHelper {
                     + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                     + EPISODE_TITLE + " TEXT NOT NULL, "
                     + EPISODE_DATE + " TEXT NOT NULL, "
-                    + EPISODE_LINK + " TEXT NOT NULL, "
+                    + EPISODE_LINK + " TEXT UNIQUE NOT NULL, "
                     + EPISODE_DESC + " TEXT NOT NULL, "
                     + EPISODE_DOWNLOAD_LINK + " TEXT NOT NULL, "
                     + EPISODE_FILE_URI + " TEXT NOT NULL)";
