@@ -29,7 +29,6 @@ public class PodcastProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(uri, null);
         }
 
-        db.close();
         return numDeleted;
     }
 
@@ -70,7 +69,6 @@ public class PodcastProvider extends ContentProvider {
             throw new android.database.SQLException("falha na inserção em: " + uri);
         }
         getContext().getContentResolver().notifyChange(uri, null);
-        db.close();
         return returnUri;
     }
 
@@ -96,7 +94,6 @@ public class PodcastProvider extends ContentProvider {
                 sortOrder);
 
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
-        db.close();
         return cursor;
     }
 
@@ -114,7 +111,6 @@ public class PodcastProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(uri, null);
        }
 
-       db.close();
        return numUpdated;
     }
 }

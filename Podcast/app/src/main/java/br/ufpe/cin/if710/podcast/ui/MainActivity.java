@@ -1,21 +1,23 @@
 package br.ufpe.cin.if710.podcast.ui;
 
+
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -30,11 +32,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import br.ufpe.cin.if710.podcast.R;
+import br.ufpe.cin.if710.podcast.receivers.PodcastReceiver;
+import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
 import br.ufpe.cin.if710.podcast.ui.adapter.XmlFeedAdapter;
+import br.ufpe.cin.if710.podcast.util.GetFromDatabase;
+
+import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.BROADCAST_ACTION;
 
 public class MainActivity extends Activity {
 
@@ -43,8 +50,12 @@ public class MainActivity extends Activity {
     //TODO teste com outros links de podcast
 
     private ListView items;
+    private PodcastReceiver onDownloadXMLEvent;
     private final String[] permissions = {
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_NETWORK_STATE,
+            Manifest.permission.INTERNET
     };
 
     @Override
@@ -53,6 +64,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         items = (ListView) findViewById(R.id.items);
         verifyStoragePermissions(this, permissions);
+        onDownloadXMLEvent = new PodcastReceiver(this, items);
     }
 
     @Override
@@ -79,14 +91,27 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        new DownloadXmlTask().execute(RSS_FEED);
+        // Register Dynamic Receiver
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                onDownloadXMLEvent,
+                new IntentFilter(BROADCAST_ACTION)
+        );
+
+        // Calls service to download podcasts info
+        Log.d("onStart","serviceMethod");
+
+        DownloadXMLService.startActionGetData(this,RSS_FEED);
+//        new DownloadXmlTask().execute(RSS_FEED);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        LocalBroadcastManager.getInstance(this)
+                .unregisterReceiver(onDownloadXMLEvent);
+
         XmlFeedAdapter adapter = (XmlFeedAdapter) items.getAdapter();
-        adapter.clear();
+        if (adapter != null) adapter.clear();
     }
 
     private void insertDataDb(List<ItemFeed> itemList){
@@ -110,39 +135,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    private class DownloadXmlTask extends AsyncTask<String, Void, List<ItemFeed>> {
-        @Override
-        protected void onPreExecute() {
-            Toast.makeText(getApplicationContext(), "iniciando...", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        protected List<ItemFeed> doInBackground(String... params) {
-            List<ItemFeed> itemList = new ArrayList<>();
-            try {
-                itemList = XmlFeedParser.parse(getRssFeed(params[0]));
-                insertDataDb(itemList);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (XmlPullParserException e) {
-                e.printStackTrace();
-            }
-            return itemList;
-        }
-
-        @Override
-        protected void onPostExecute(List<ItemFeed> feed) {
-            Toast.makeText(getApplicationContext(), "terminando...", Toast.LENGTH_SHORT).show();
-
-            //Adapter Personalizado
-            XmlFeedAdapter adapter = new XmlFeedAdapter(getApplicationContext(), R.layout.itemlista, feed);
-
-            //atualizar o list view
-            items.setAdapter(adapter);
-            items.setTextFilterEnabled(true);
-
-        }
-    }
 
     //TODO Opcional - pesquise outros meios de obter arquivos da internet
     private String getRssFeed(String feed) throws IOException {
@@ -166,6 +158,8 @@ public class MainActivity extends Activity {
         }
         return rssFeed;
     }
+
+
 
     public static void verifyStoragePermissions(Activity activity, String[] per) {
         // Check if we have write permission

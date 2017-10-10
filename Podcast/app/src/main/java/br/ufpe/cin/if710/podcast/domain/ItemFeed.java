@@ -6,7 +6,16 @@ public class ItemFeed {
     private final String pubDate;
     private final String description;
     private final String downloadLink;
+    private final String uri;
 
+    public ItemFeed(String title, String link, String pubDate, String description, String downloadLink, String item_uri) {
+        this.title = title;
+        this.link = link;
+        this.pubDate = pubDate;
+        this.description = description;
+        this.downloadLink = downloadLink;
+        this.uri = item_uri;
+    }
 
     public ItemFeed(String title, String link, String pubDate, String description, String downloadLink) {
         this.title = title;
@@ -14,6 +23,11 @@ public class ItemFeed {
         this.pubDate = pubDate;
         this.description = description;
         this.downloadLink = downloadLink;
+        this.uri = "NONE";
+    }
+
+    public String getUri() {
+        return uri;
     }
 
     public String getTitle() {
@@ -42,6 +56,7 @@ public class ItemFeed {
                 link + "\n" +
                 pubDate + "\n" +
                 description + "\n" +
+                uri + "\n" +
                 downloadLink + "\n";
     }
 }
