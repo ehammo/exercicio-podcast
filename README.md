@@ -40,7 +40,7 @@ episódio, atualizações em segundo plano, notificações de novos episódios, 
 ----
 
 # Status
-
+(8/15)
 | Passo | Completou? |
 | ------ | ------ |
 | 1 | **sim** |
