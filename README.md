@@ -38,8 +38,8 @@ episódio, atualizações em segundo plano, notificações de novos episódios, 
   - Entregue o exercício mesmo que não tenha completado todos os itens listados acima. (marque no arquivo README.md do seu repositório o que completou, usando o template abaixo)
 
 ----
-(8/15)
-# Status
+
+# Status (8/15)
 | Passo | Completou? |
 | ------ | ------ |
 | 1 | **sim** |
