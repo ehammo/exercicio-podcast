@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -18,13 +17,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.net.ssl.HttpsURLConnection;
-
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
-import br.ufpe.cin.if710.podcast.util.Network;
+import br.ufpe.cin.if710.podcast.util;
 
 
 /**
@@ -91,7 +88,7 @@ public class DownloadXMLService extends IntentService {
         Log.d("service","getDataStart");
         List<ItemFeed> itemList = new ArrayList<>();
 
-        if(Network.isNetworkAvailable(getApplicationContext()) && !DEBUG) {
+        if(util.isNetworkAvailable(getApplicationContext()) && !DEBUG) {
             try {
                 // Usar parser para extrair itens provenientes do XML e salvá-los no banco de dados
                 itemList = XmlFeedParser.parse(getRssFeed(feed));

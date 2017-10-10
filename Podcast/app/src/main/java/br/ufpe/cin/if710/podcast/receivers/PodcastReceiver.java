@@ -3,13 +3,11 @@ package br.ufpe.cin.if710.podcast.receivers;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import br.ufpe.cin.if710.podcast.ui.MainActivity;
-import br.ufpe.cin.if710.podcast.util.GetFromDatabase;
+import br.ufpe.cin.if710.podcast.db.GetFromDatabase;
 
 /**
  * Created by eduardo on 09/10/2017.

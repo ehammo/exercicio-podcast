@@ -1,4 +1,4 @@
-package br.ufpe.cin.if710.podcast.util;
+package br.ufpe.cin.if710.podcast.db;
 
 import android.content.Context;
 import android.database.Cursor;

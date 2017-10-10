@@ -3,15 +3,11 @@ package br.ufpe.cin.if710.podcast.ui;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -19,16 +15,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.Toast;
-
-import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 import br.ufpe.cin.if710.podcast.R;
@@ -37,9 +29,7 @@ import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
-import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
 import br.ufpe.cin.if710.podcast.ui.adapter.XmlFeedAdapter;
-import br.ufpe.cin.if710.podcast.util.GetFromDatabase;
 
 import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.BROADCAST_ACTION;
 
@@ -50,7 +40,7 @@ public class MainActivity extends Activity {
     //TODO teste com outros links de podcast
 
     private ListView items;
-    private PodcastReceiver onDownloadXMLEvent;
+    private PodcastReceiver podcastReceiver;
     private final String[] permissions = {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -64,7 +54,7 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         items = (ListView) findViewById(R.id.items);
         verifyStoragePermissions(this, permissions);
-        onDownloadXMLEvent = new PodcastReceiver(this, items);
+        podcastReceiver = new PodcastReceiver(this, items);
     }
 
     @Override
@@ -93,7 +83,7 @@ public class MainActivity extends Activity {
         super.onStart();
         // Register Dynamic Receiver
         LocalBroadcastManager.getInstance(this).registerReceiver(
-                onDownloadXMLEvent,
+                podcastReceiver,
                 new IntentFilter(BROADCAST_ACTION)
         );
 
@@ -108,33 +98,11 @@ public class MainActivity extends Activity {
     protected void onStop() {
         super.onStop();
         LocalBroadcastManager.getInstance(this)
-                .unregisterReceiver(onDownloadXMLEvent);
+                .unregisterReceiver(podcastReceiver);
 
         XmlFeedAdapter adapter = (XmlFeedAdapter) items.getAdapter();
         if (adapter != null) adapter.clear();
     }
-
-    private void insertDataDb(List<ItemFeed> itemList){
-        for (ItemFeed item : itemList) {
-            ContentValues content = new ContentValues();
-            content.put(PodcastDBHelper.EPISODE_TITLE, item.getTitle());
-            content.put(PodcastDBHelper.EPISODE_DATE, item.getPubDate());
-            content.put(PodcastDBHelper.EPISODE_LINK, item.getLink());
-            content.put(PodcastDBHelper.EPISODE_DESC, item.getDescription());
-            content.put(PodcastDBHelper.EPISODE_DOWNLOAD_LINK, item.getDownloadLink());
-            content.put(PodcastDBHelper.EPISODE_FILE_URI, "");
-
-            Uri uri = getContentResolver().insert(PodcastProviderContract.EPISODE_LIST_URI,
-                    content);
-
-            if (uri != null) {
-                Log.d("Main Activity", "Item inseridos com sucesso");
-            } else {
-                Log.e("Main Activity", "Falha na inserção do item: " + item.toString());
-            }
-        }
-    }
-
 
     //TODO Opcional - pesquise outros meios de obter arquivos da internet
     private String getRssFeed(String feed) throws IOException {
