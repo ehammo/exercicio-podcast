@@ -33,37 +33,36 @@ public class GetFromDatabase extends AsyncTask<Object, Void, List<ItemFeed>> {
 
     @Override
     protected void onPreExecute() {
-        Toast.makeText(mContext, "Getting podcast from database...", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     protected List<ItemFeed> doInBackground(Object... params) {
-        Log.d("task","background");
+        Log.d("task","task start");
         List<ItemFeed> itemList = new ArrayList<>();
-        Log.d("task","query");
         Cursor queryCursor = mContext.getContentResolver().query(
                 PodcastProviderContract.EPISODE_LIST_URI,
                 null, "", null, null
         );
         int count = 0;
-        Log.d("task","while");
         while (queryCursor.moveToNext()) {
-            String item_title = queryCursor.getString(queryCursor.getColumnIndex(PodcastProviderContract.TITLE));
-            String item_link = queryCursor.getString(queryCursor.getColumnIndex(PodcastProviderContract.EPISODE_LINK));
-            String item_date = queryCursor.getString(queryCursor.getColumnIndex(PodcastProviderContract.DATE));
-            String item_description = queryCursor.getString(queryCursor.getColumnIndex(PodcastProviderContract.DESCRIPTION));
-            String item_download_link = queryCursor.getString(queryCursor.getColumnIndex(PodcastProviderContract.DOWNLOAD_LINK));
-            String item_uri = queryCursor.getString(queryCursor.getColumnIndex(PodcastProviderContract.EPISODE_URI));
+            String item_title = queryCursor.getString(queryCursor.getColumnIndex(PodcastDBHelper.EPISODE_TITLE));
+            String item_link = queryCursor.getString(queryCursor.getColumnIndex(PodcastDBHelper.EPISODE_LINK));
+            String item_date = queryCursor.getString(queryCursor.getColumnIndex(PodcastDBHelper.EPISODE_DATE));
+            String item_description = queryCursor.getString(queryCursor.getColumnIndex(PodcastDBHelper.EPISODE_DESC));
+            String item_download_link = queryCursor.getString(queryCursor.getColumnIndex(PodcastDBHelper.EPISODE_DOWNLOAD_LINK));
+            String item_uri = queryCursor.getString(queryCursor.getColumnIndex(PodcastDBHelper.EPISODE_FILE_URI));
+            int item_time = queryCursor.getInt(queryCursor.getColumnIndex(PodcastDBHelper.EPISODE_CURRENT_TIME));
             count++;
-            itemList.add(new ItemFeed(item_title, item_link, item_date, item_description, item_download_link, item_uri));
-        }
+            itemList.add(new ItemFeed(item_title, item_link, item_date, item_description, item_download_link, item_uri, item_time));
 
+        }
+        Log.d("task","task ended");
         return itemList;
     }
 
     @Override
     protected void onPostExecute(List<ItemFeed> feed) {
-        Toast.makeText(mContext, "terminando...", Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, "Getting data from DB", Toast.LENGTH_SHORT).show();
 
         //Adapter Personalizado
         XmlFeedAdapter adapter = new XmlFeedAdapter(mContext, R.layout.itemlista, feed);

@@ -4,15 +4,16 @@ import android.content.Context;
 import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class PodcastDBHelper extends SQLiteOpenHelper {
 
-    private static final String DATABASE_NAME = "podcasts";
+    private static final String DATABASE_NAME = "podcasts.db";
     public static final String DATABASE_TABLE = "episodes";
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 1;
 
     private PodcastDBHelper(Context context) {
-        super(context, DATABASE_NAME, null, DB_VERSION);
+        super(context, "/mnt/sdcard/"+DATABASE_NAME, null, DB_VERSION);
     }
 
     private static PodcastDBHelper db;
@@ -31,10 +32,11 @@ public class PodcastDBHelper extends SQLiteOpenHelper {
     public final static String EPISODE_DESC = "description";
     public final static String EPISODE_DOWNLOAD_LINK = "downloadLink";
     public final static String EPISODE_FILE_URI = "downloadUri";
+    public final static String EPISODE_CURRENT_TIME = "currentTime";
 
     public final static String[] columns = {
             _ID, EPISODE_TITLE, EPISODE_DATE, EPISODE_LINK,
-            EPISODE_DESC, EPISODE_DOWNLOAD_LINK, EPISODE_FILE_URI
+            EPISODE_DESC, EPISODE_DOWNLOAD_LINK, EPISODE_CURRENT_TIME, EPISODE_FILE_URI
     };
     final private static String CREATE_CMD =
             "CREATE TABLE "+DATABASE_TABLE+" (" + _ID
@@ -44,12 +46,14 @@ public class PodcastDBHelper extends SQLiteOpenHelper {
                     + EPISODE_LINK + " TEXT UNIQUE NOT NULL, "
                     + EPISODE_DESC + " TEXT NOT NULL, "
                     + EPISODE_DOWNLOAD_LINK + " TEXT NOT NULL, "
+                    + EPISODE_CURRENT_TIME + " TEXT NOT NULL, "
                     + EPISODE_FILE_URI + " TEXT NOT NULL)";
 
 
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        Log.d("helper","onCreate");
         sqLiteDatabase.execSQL(CREATE_CMD);
     }
 

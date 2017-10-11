@@ -7,6 +7,7 @@ public class ItemFeed {
     private final String description;
     private final String downloadLink;
     private final String uri;
+    private int currentTime;
 
     public ItemFeed(String title, String link, String pubDate, String description, String downloadLink, String item_uri) {
         this.title = title;
@@ -15,6 +16,25 @@ public class ItemFeed {
         this.description = description;
         this.downloadLink = downloadLink;
         this.uri = item_uri;
+        this.currentTime=0;
+    }
+
+    public ItemFeed(String title, String link, String pubDate, String description, String downloadLink, String item_uri, int currentTime) {
+        this.title = title;
+        this.link = link;
+        this.pubDate = pubDate;
+        this.description = description;
+        this.downloadLink = downloadLink;
+        this.uri = item_uri;
+        this.currentTime=currentTime;
+    }
+
+    public int getCurrentTime() {
+        return currentTime;
+    }
+
+    public void setCurrentTime(int currentTime) {
+        this.currentTime = currentTime;
     }
 
     public ItemFeed(String title, String link, String pubDate, String description, String downloadLink) {

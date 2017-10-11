@@ -1,25 +1,45 @@
 package br.ufpe.cin.if710.podcast.ui.adapter;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
+
+import android.content.ClipData;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import br.ufpe.cin.if710.podcast.R;
+import br.ufpe.cin.if710.podcast.Util;
+import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
+import br.ufpe.cin.if710.podcast.db.PodcastProvider;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
+import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
 import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
 
 public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 
+    Context mContext;
     int linkResource;
+    ViewHolder holder;
 
     public XmlFeedAdapter(Context context, int resource, List<ItemFeed> objects) {
         super(context, resource, objects);
+        mContext = context;
         linkResource = resource;
     }
 
@@ -50,33 +70,79 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 	/**/
 
     //http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder
+
+    public class MyOnCompletedListener implements MediaPlayer.OnCompletionListener{
+
+        ItemFeed item;
+        Button btn;
+
+        public MyOnCompletedListener(Button btn, ItemFeed item){
+            this.btn = btn;
+            this.item = item;
+        }
+
+        public void onCompletion(MediaPlayer mp){
+            btn.setText("Play");
+            btn.setBackgroundColor(Color.GREEN);
+
+            ContentValues cv = new ContentValues();
+            cv.put(PodcastDBHelper.EPISODE_CURRENT_TIME, "0");
+            String selection = PodcastProviderContract.EPISODE_LINK + " = ?";
+            String[] selection_args = new String[]{item.getLink()};
+            mContext.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI, cv, selection, selection_args);
+        }
+    }
+
     static class ViewHolder {
         TextView item_title;
         TextView item_date;
+        Button item_Btn;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder;
+        final ItemFeed currentItem = getItem(position);
         if (convertView == null) {
             convertView = View.inflate(getContext(), linkResource, null);
-            holder = new ViewHolder();
-            holder.item_title = (TextView) convertView.findViewById(R.id.item_title);
-            holder.item_date = (TextView) convertView.findViewById(R.id.item_date);
-            convertView.setTag(holder);
+            this.holder = new ViewHolder();
+            this.holder.item_title = (TextView) convertView.findViewById(R.id.item_title);
+            this.holder.item_date = (TextView) convertView.findViewById(R.id.item_date);
+            this.holder.item_Btn = convertView.findViewById(R.id.item_action);
+
+            convertView.setTag(this.holder);
         } else {
-            holder = (ViewHolder) convertView.getTag();
+            this.holder = (ViewHolder) convertView.getTag();
         }
         final ItemFeed item = getItem(position);
-        holder.item_title.setText(getItem(position).getTitle());
-        holder.item_date.setText(getItem(position).getPubDate());
+        this.holder.item_title.setText(currentItem.getTitle());
+        this.holder.item_date.setText(currentItem.getPubDate());
 
-        holder.item_title.setOnClickListener(new View.OnClickListener() {
+        if (!(currentItem.getUri()).equals("NONE")) {
+            this.holder.item_Btn.setEnabled(true);
+            MediaPlayer player = Util.getMPReg().get(currentItem.getLink());
+            if (currentItem.getCurrentTime() == 0) {
+                this.holder.item_Btn.setText("Play");
+                this.holder.item_Btn.setBackgroundColor(Color.GREEN);
+            }else if (player != null && player.isPlaying()){
+                this.holder.item_Btn.setText("Pause");
+                this.holder.item_Btn.setBackgroundColor(Color.GRAY);
+            }else{
+                this.holder.item_Btn.setText("Continue");
+                this.holder.item_Btn.setBackgroundColor(Color.GREEN);
+            }
+        }
+        else {
+            Log.d("Adapter", currentItem.getTitle()+" "+currentItem.getUri());
+
+            this.holder.item_Btn.setText("Download");
+            this.holder.item_Btn.setBackgroundColor(mContext.getResources().getColor(R.color.Orange));
+        }
+
+        this.holder.item_title.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View view) {
                 Context context = getContext();
-
                 Intent intent = new Intent(context, EpisodeDetailActivity.class);
                 intent.putExtra(PodcastProviderContract.TITLE, item.getTitle());
                 intent.putExtra(PodcastProviderContract.EPISODE_LINK, item.getLink());
@@ -85,7 +151,69 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
                 context.startActivity(intent);
             }
         });
+        final Uri item_uri = Uri.parse(currentItem.getUri());
+        Log.d("Adapter","Boolean: "+!(item_uri.toString().equals("NONE")));
+
+
+        this.holder.item_Btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if ((currentItem.getUri()).equals("NONE")) {
+                    String item_download_link = currentItem.getDownloadLink();
+                    if (Util.isNetworkAvailable(mContext)) {
+                        DownloadXMLService.startActionDownloadPodcast(mContext, currentItem);
+                        ((Button)view).setText("Downloading");
+                        ((Button)view).setBackgroundColor(Color.BLUE);
+                    }
+                    else {
+                        Toast.makeText(mContext, "There isn't a internet connection", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    fixMediaPlayer(item_uri, currentItem);
+                    MediaPlayer mediaPlayer = Util.getMPReg().get(currentItem.getLink());
+                    if (((Button)view).getText() == "Play" ) {
+                        mediaPlayer.start();
+                        ((Button)view).setText("Pause");
+                        ((Button)view).setBackgroundColor(Color.GRAY);
+                    }
+
+                    else if (((Button)view).getText() == "Continue") {
+                        Log.d("Adapter", currentItem.getCurrentTime()+"");
+                        mediaPlayer.seekTo(currentItem.getCurrentTime());
+                        mediaPlayer.start();
+                        ((Button)view).setText("Pause");
+                        ((Button)view).setBackgroundColor(Color.GRAY);
+                    }
+
+                    else if (((Button)view).getText() == "Pause") {
+                        mediaPlayer.pause();
+                        ((Button)view).setText("Continue");
+                        ((Button)view).setBackgroundColor(Color.GREEN);
+
+                        currentItem.setCurrentTime(mediaPlayer.getCurrentPosition());
+
+                        ContentValues cv = new ContentValues();
+                        cv.put(PodcastDBHelper.EPISODE_CURRENT_TIME, "" + currentItem.getCurrentTime());
+                        String selection = PodcastProviderContract.EPISODE_LINK + " = ?";
+                        String[] selection_args = new String[]{currentItem.getLink()};
+                        mContext.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI, cv, selection, selection_args);
+                    }
+                }
+            }
+        });
 
         return convertView;
     }
+
+    public void fixMediaPlayer(Uri item_uri, ItemFeed currentItem){
+        if (Util.getMPReg().get(currentItem.getLink())==null && !(item_uri.toString().equals("NONE"))) {
+            Log.d("Adapter","enter");
+            MediaPlayer mediaPlayer = MediaPlayer.create(mContext, item_uri);
+            mediaPlayer.setLooping(false);
+            mediaPlayer.setOnCompletionListener(new MyOnCompletedListener(holder.item_Btn, currentItem));
+            Util.addReg(currentItem.getLink(), mediaPlayer);
+            //todo:tratar erro de quando o cara apaga o podcast
+        }
+    }
+
 }

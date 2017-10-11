@@ -9,6 +9,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
 
+import br.ufpe.cin.if710.podcast.domain.ItemFeed;
+
 public class PodcastProvider extends ContentProvider {
 
     private PodcastDBHelper mPodcastDBHelper;
@@ -41,29 +43,36 @@ public class PodcastProvider extends ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        Uri returnUri;
+        Uri returnUri = null;
         final SQLiteDatabase db = this.mPodcastDBHelper.getWritableDatabase();
 
         String link = PodcastProviderContract.EPISODE_LINK;
-        Log.d("insert",values.getAsString(link));
-        if(values.getAsString(link)!=null) {
-            long id = db.update(PodcastProviderContract.EPISODE_TABLE,
-                    values,
-                    link + "= \"" + values.getAsString(link) + "\"",
-                    null);
 
-            if (id == 0) {
+        if(values.getAsString(link)!=null) {
+
+            Cursor cursor = query(uri, null, link+" = ?", new String[]{values.getAsString(link)}, null);
+            int count = cursor.getCount();
+
+            if(count<=0){
+                Log.d("PodcastProvider",values.getAsString(link));
+
                 Log.d("PodcastProvider", "CommonInsert");
-                id = db.insert(PodcastProviderContract.EPISODE_TABLE,
+                Long id = db.insert(PodcastProviderContract.EPISODE_TABLE,
                         null,
                         values);
-            }
 
-            if (id > 0) {
-                returnUri = ContentUris.withAppendedId(PodcastProviderContract.EPISODE_LIST_URI, id);
-                Log.d("PodcastProvider", returnUri.toString());
-            } else {
-                throw new android.database.SQLException("falha na inserção em: " + uri);
+                if (id > 0) {
+                    returnUri = ContentUris.withAppendedId(PodcastProviderContract.EPISODE_LIST_URI, id);
+                    Log.d("PodcastProvider", returnUri.toString());
+                } else {
+                    throw new android.database.SQLException("falha na inserção em: " + uri);
+                }
+            }else{
+//Somehow update without changing currentTime or uri unless download_link changed
+//                long id = db.update(PodcastProviderContract.EPISODE_TABLE,
+//                        values,
+//                        link + "= \"" + values.getAsString(link) + "\"",
+//                        null);
             }
         }else{
             throw new android.database.SQLException("falha na inserção em: " + uri);
@@ -101,6 +110,7 @@ public class PodcastProvider extends ContentProvider {
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
         final SQLiteDatabase db = this.mPodcastDBHelper.getWritableDatabase();
+        Log.d("PodcastProvider", "update");
 
         int numUpdated = db.update(PodcastProviderContract.EPISODE_TABLE,
                 values,
@@ -108,9 +118,17 @@ public class PodcastProvider extends ContentProvider {
                 selectionArgs);
 
        if (numUpdated != 0) {
-            getContext().getContentResolver().notifyChange(uri, null);
+           Log.d("PodcastProvider", "updated");
+
+           Log.d("PodcastProvider", "testing");
+
+           Log.d("PodcastProvider", "end testing");
+
+
+           getContext().getContentResolver().notifyChange(uri, null);
        }
 
        return numUpdated;
     }
+
 }

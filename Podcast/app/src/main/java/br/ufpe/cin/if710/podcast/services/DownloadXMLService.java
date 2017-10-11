@@ -4,24 +4,35 @@ import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
-import br.ufpe.cin.if710.podcast.util;
+import br.ufpe.cin.if710.podcast.Util;
 
 
 /**
@@ -33,13 +44,9 @@ public class DownloadXMLService extends IntentService {
     private static final String ACTION_GET_DATA = "br.ufpe.cin.if710.podcast.services.action.ACTION_GET_DATA";
     private static final String ACTION_DOWNLOAD_PODCAST = "br.ufpe.cin.if710.podcast.services.action.ACTION_DOWNLOAD_PODCAST";
     private static final String PARAM1 = "br.ufpe.cin.if710.podcast.services.extra.PARAM1";
-    public static final String BROADCAST_TYPE = "BROADCAST_TYPE";
     public static final String GET_DATA_BROADCAST = "br.ufpe.cin.if710.broadcasts.GET_DATA_BROADCAST";
-    public static final String DOWNLOAD_PODCAST_BROADCAST = "br.ufpe.cin.if710.broadcasts.DOWNLOAD_PODCAST_BROADCAST";
-    public static final String BROADCAST_ACTION = "br.ufpe.cin.if710.broadcasts.BROADCAST_ACTION";
     public static final String UPDATE_DATA_BROADCAST = "br.ufpe.cin.if710.broadcasts.UPDATE_DATA_BROADCAST";
-
-    public static final boolean DEBUG = true;
+    public static final String DOWNLOAD_BROADCAST = "br.ufpe.cin.if710.broadcasts.DOWNLOAD_BROADCAST";
 
     public DownloadXMLService() {
         super("DownloadXMLService");
@@ -53,22 +60,23 @@ public class DownloadXMLService extends IntentService {
         context.startService(intent);
     }
 
-    public static void startActionDownloadPodcast(Context context, String param1, String param2) {
+    public static void startActionDownloadPodcast(Context context, ItemFeed item) {
         Intent intent = new Intent(context, DownloadXMLService.class);
         intent.setAction(ACTION_DOWNLOAD_PODCAST);
-        intent.putExtra(PARAM1, param1);
+        intent.putExtra(PARAM1, item.getLink());
+        intent.setData(Uri.parse(item.getDownloadLink()));
         context.startService(intent);
     }
 
 
     @Override
     public void onHandleIntent(Intent intent) {
-        Log.d("service","onHandle");
+        Log.d("service","Service onHandleIntent");
         if (intent != null) {
-            Log.d("service","notNull");
+            Log.d("service","intent notNull");
             final String action = intent.getAction();
             if (ACTION_GET_DATA.equals(action)) {
-                Log.d("service","filter");
+                Log.d("service","getData");
                 final String feedLink = intent.getStringExtra(PARAM1);
                 try {
                     handleActionGetData(feedLink);
@@ -76,8 +84,12 @@ public class DownloadXMLService extends IntentService {
                     e.printStackTrace();
                 }
             } else if (ACTION_DOWNLOAD_PODCAST.equals(action)) {
-                final String downloadLink = intent.getStringExtra(PARAM1);
-                handleActionDownloadPodcast(downloadLink);
+                Log.d("service", "download");
+                Log.d("service", intent.getData().getLastPathSegment());
+
+                final String pk = intent.getStringExtra(PARAM1);
+                final Uri uri = intent.getData();
+                handleActionDownloadPodcast(pk, uri);
             }
         }
     }
@@ -88,7 +100,8 @@ public class DownloadXMLService extends IntentService {
         Log.d("service","getDataStart");
         List<ItemFeed> itemList = new ArrayList<>();
 
-        if(util.isNetworkAvailable(getApplicationContext()) && !DEBUG) {
+        sendBroadcast(GET_DATA_BROADCAST);
+        if(Util.isNetworkAvailable(getApplicationContext())) {
             try {
                 // Usar parser para extrair itens provenientes do XML e salvá-los no banco de dados
                 itemList = XmlFeedParser.parse(getRssFeed(feed));
@@ -99,27 +112,107 @@ public class DownloadXMLService extends IntentService {
             }
 
             for (ItemFeed item : itemList) {
-                ContentValues cv = new ContentValues();
+                ContentValues content = new ContentValues();
 
-                cv.put(PodcastDBHelper.EPISODE_DATE, item.getPubDate());
-                cv.put(PodcastDBHelper.EPISODE_DESC, item.getDescription());
-                cv.put(PodcastDBHelper.EPISODE_DOWNLOAD_LINK, item.getDownloadLink());
-                cv.put(PodcastDBHelper.EPISODE_LINK, item.getLink());
-                cv.put(PodcastDBHelper.EPISODE_TITLE, item.getTitle());
-                //cv.put(PodcastDBHelper.EPISODE_FILE_URI, item.getUri());
+                content.put(PodcastDBHelper.EPISODE_DATE, item.getPubDate());
+                content.put(PodcastDBHelper.EPISODE_DESC, item.getDescription());
+                content.put(PodcastDBHelper.EPISODE_DOWNLOAD_LINK, item.getDownloadLink());
+                content.put(PodcastDBHelper.EPISODE_LINK, item.getLink());
+                content.put(PodcastDBHelper.EPISODE_TITLE, item.getTitle());
+                content.put(PodcastDBHelper.EPISODE_FILE_URI, item.getUri());
+                content.put(PodcastDBHelper.EPISODE_CURRENT_TIME, item.getCurrentTime());
 
-                getContentResolver().insert(PodcastProviderContract.EPISODE_LIST_URI, cv);
+                getContentResolver().insert(PodcastProviderContract.EPISODE_LIST_URI, content);
             }
         }
-            Intent intent = new Intent(BROADCAST_ACTION);
-            Log.d("service","broadcast");
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        sendBroadcast(UPDATE_DATA_BROADCAST);
     }
 
-    private void handleActionDownloadPodcast(String downloadLink) {
-        throw new UnsupportedOperationException("Not yet implemented");
+    private void handleActionDownloadPodcast(String pk, Uri uri) {
+        File root = new File(Environment.getExternalStorageDirectory() + "/Podcasts");
+
+        root.mkdirs();
+
+        File file_output = new File(root, uri.getLastPathSegment());
+
+        if (!file_output.exists()) {
+            Log.d("service","exists");
+            Log.d("service","download");
+            downloadItem(file_output.getPath(),uri.toString());
+            updateItem(pk, file_output.getPath());
+        }else{
+            updateItem(pk, file_output.getPath());
+        }
+        sendBroadcast(DOWNLOAD_BROADCAST);
     }
 
+    private void sendBroadcast(String action){
+        Intent intent = new Intent(action);
+        Log.d("service","broadcast");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void downloadItem(String path, String uriToString){
+        HttpURLConnection c = null;
+        FileOutputStream fos = null;
+        BufferedOutputStream out = null;
+        try {
+            Log.d("service", "conexao");
+            URL url = new URL(uriToString);
+            Log.d("service", "url: "+url);
+            c = (HttpURLConnection) url.openConnection();
+            fos = new FileOutputStream(path);
+            out = new BufferedOutputStream(fos);
+            Log.d("service", "start podcast service");
+
+            Log.d("service", "download starting");
+            InputStream in = c.getInputStream();
+
+            byte[] buffer = new byte[8192];
+            int len = 0;
+            int count = 0;
+            while ((len = in.read(buffer)) >= 0) {
+                out.write(buffer, 0, len);
+                if (count % 100 == 0) {
+                    Log.d("service", "Buffer " + count);
+                }
+                count++;
+            }
+            out.flush();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            Log.d("service", "download ended");
+            try {
+                fos.getFD().sync();
+                out.close();
+                c.disconnect();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    private void updateItem(String pk, String path){
+        Log.d("service","update");
+        Log.d("service","path="+path);
+        // Atualizar URI do podcast baixado (no banco de dados)
+        ContentValues content = new ContentValues();
+        content.put(PodcastDBHelper.EPISODE_FILE_URI, path);
+
+        String selection = PodcastProviderContract.EPISODE_LINK + " = ?";
+        String[] selection_args = new String[]{pk};
+
+        getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI, content, selection, selection_args);
+
+    }
+
+    //TODO Opcional - pesquise outros meios de obter arquivos da internet
     private String getRssFeed(String feed) throws IOException {
         InputStream in = null;
         String rssFeed = "";
