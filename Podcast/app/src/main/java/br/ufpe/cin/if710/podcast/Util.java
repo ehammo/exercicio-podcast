@@ -1,9 +1,13 @@
 package br.ufpe.cin.if710.podcast;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
+import android.support.v4.app.ActivityCompat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,4 +53,34 @@ public class Util {
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
+
+    public static void verifyPermissions(Activity activity, String[] allPermissionNeeded) {
+        // Check if we have write permission
+        for (int i = 0; i < allPermissionNeeded.length; i++) {
+            int permission = ActivityCompat.checkSelfPermission(activity, allPermissionNeeded[i]);
+
+            if (permission != PackageManager.PERMISSION_GRANTED) {
+                // We don't have permission so prompt the user
+                ActivityCompat.requestPermissions(
+                        activity,
+                        allPermissionNeeded,
+                        1
+                );
+                i = allPermissionNeeded.length;
+            }
+
+        }
+
+    }
+
+    public static boolean hasPermissions(Context context, String[] allPermissionNeeded)
+    {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && context != null && allPermissionNeeded != null)
+            for (String permission : allPermissionNeeded)
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED)
+                    return false;
+        return true;
+    }
+
 }

@@ -23,7 +23,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
+import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.R;
+import br.ufpe.cin.if710.podcast.Util;
 import br.ufpe.cin.if710.podcast.receivers.PodcastReceiver;
 import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
@@ -55,7 +57,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         items = (ListView) findViewById(R.id.items);
-        verifyStoragePermissions(this, permissions);
+        Util.verifyPermissions(this, permissions);
         podcastReceiver = new PodcastReceiver(this, items);
     }
 
@@ -93,15 +95,50 @@ public class MainActivity extends Activity {
         );
 
         // Calls service to download podcasts info
-        Log.d("onStart","serviceMethod");
-
-        DownloadXMLService.startActionGetData(this,RSS_FEED);
+        Log.d("Main","onStart");
+        if(Util.hasPermissions(this, permissions)) {
+            if (!DownloadXMLService.isDownloading) {
+                podcastReceiver.getFromDatabase();
+                DownloadXMLService.startActionGetData(this, RSS_FEED);
+            } else {
+                podcastReceiver.getFromDatabase();
+            }
+        }
 //        new DownloadXmlTask().execute(RSS_FEED);
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
+        if(Util.hasPermissions(this, permissions)) {
+            if (!DownloadXMLService.isDownloading) {
+                podcastReceiver.getFromDatabase();
+                DownloadXMLService.startActionGetData(this, RSS_FEED);
+            } else {
+                podcastReceiver.getFromDatabase();
+            }
+        }else{
+            Util.verifyPermissions(this, permissions);
+        }
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("Main","onResume");
+        PodcastApp.activityResumed();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("Main","onPause");
+        PodcastApp.activityPaused();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        Log.d("Main","onStop");
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(podcastReceiver);
 
@@ -109,22 +146,7 @@ public class MainActivity extends Activity {
         if (adapter != null) adapter.clear();
     }
 
-    public static void verifyStoragePermissions(Activity activity, String[] per) {
-        // Check if we have write permission
-        for (int i = 0; i < per.length; i++) {
-            int permission = ActivityCompat.checkSelfPermission(activity, per[i]);
 
-            if (permission != PackageManager.PERMISSION_GRANTED) {
-                // We don't have permission so prompt the user
-                ActivityCompat.requestPermissions(
-                        activity,
-                        per,
-                        1
-                );
-                i = per.length;
-            }
 
-        }
 
-    }
 }

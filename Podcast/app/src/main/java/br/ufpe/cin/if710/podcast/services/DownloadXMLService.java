@@ -48,6 +48,8 @@ public class DownloadXMLService extends IntentService {
     public static final String UPDATE_DATA_BROADCAST = "br.ufpe.cin.if710.broadcasts.UPDATE_DATA_BROADCAST";
     public static final String DOWNLOAD_BROADCAST = "br.ufpe.cin.if710.broadcasts.DOWNLOAD_BROADCAST";
 
+    public static boolean isDownloading = false;
+
     public DownloadXMLService() {
         super("DownloadXMLService");
     }
@@ -100,7 +102,6 @@ public class DownloadXMLService extends IntentService {
         Log.d("service","getDataStart");
         List<ItemFeed> itemList = new ArrayList<>();
 
-        sendBroadcast(GET_DATA_BROADCAST);
         if(Util.isNetworkAvailable(getApplicationContext())) {
             try {
                 // Usar parser para extrair itens provenientes do XML e salvá-los no banco de dados
@@ -139,6 +140,7 @@ public class DownloadXMLService extends IntentService {
             Log.d("service","exists");
             Log.d("service","download");
             downloadItem(file_output.getPath(),uri.toString());
+            isDownloading = false;
             updateItem(pk, file_output.getPath());
         }else{
             updateItem(pk, file_output.getPath());
@@ -153,6 +155,7 @@ public class DownloadXMLService extends IntentService {
     }
 
     private void downloadItem(String path, String uriToString){
+        isDownloading = true;
         HttpURLConnection c = null;
         FileOutputStream fos = null;
         BufferedOutputStream out = null;
