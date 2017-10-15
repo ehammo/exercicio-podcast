@@ -49,6 +49,7 @@ public class DownloadXMLService extends IntentService {
     public static final String DOWNLOAD_BROADCAST = "br.ufpe.cin.if710.broadcasts.DOWNLOAD_BROADCAST";
 
     public static boolean isDownloading = false;
+    public static String currentDownloadingItem = "NONE";
 
     public DownloadXMLService() {
         super("DownloadXMLService");
@@ -65,6 +66,7 @@ public class DownloadXMLService extends IntentService {
     public static void startActionDownloadPodcast(Context context, ItemFeed item) {
         Intent intent = new Intent(context, DownloadXMLService.class);
         intent.setAction(ACTION_DOWNLOAD_PODCAST);
+        currentDownloadingItem = item.getDownloadLink();
         intent.putExtra(PARAM1, item.getLink());
         intent.setData(Uri.parse(item.getDownloadLink()));
         context.startService(intent);
@@ -141,6 +143,7 @@ public class DownloadXMLService extends IntentService {
             Log.d("service","download");
             downloadItem(file_output.getPath(),uri.toString());
             isDownloading = false;
+            currentDownloadingItem = "NONE";
             updateItem(pk, file_output.getPath());
         }else{
             updateItem(pk, file_output.getPath());

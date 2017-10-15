@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.net.nsd.NsdManager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -181,12 +182,12 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
         if (!(currentItem.getUri()).equals("NONE")) {
             this.holder.item_Btn.setEnabled(true);
             MediaPlayer player = Util.getMPReg().get(currentItem.getLink());
-            if (currentItem.getCurrentTime() == 0) {
-                this.holder.item_Btn.setText("Play");
-                this.holder.item_Btn.setBackgroundColor(Color.GREEN);
-            }else if (player != null && player.isPlaying()){
+            if (player != null && player.isPlaying()) {
                 this.holder.item_Btn.setText("Pause");
                 this.holder.item_Btn.setBackgroundColor(Color.GRAY);
+            }else if (currentItem.getCurrentTime() == 0){
+                this.holder.item_Btn.setText("Play");
+                this.holder.item_Btn.setBackgroundColor(Color.GREEN);
             }else{
                 this.holder.item_Btn.setText("Continue");
                 this.holder.item_Btn.setBackgroundColor(Color.GREEN);
@@ -194,7 +195,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
         }
         else {
             Log.d("Adapter", currentItem.getTitle()+" "+currentItem.getUri());
-            if(DownloadXMLService.isDownloading){
+            if(DownloadXMLService.isDownloading && DownloadXMLService.currentDownloadingItem.equals(currentItem.getDownloadLink())){
                 this.holder.item_Btn.setText("Downloading");
                 this.holder.item_Btn.setBackgroundColor(Color.BLUE);
             }else {
