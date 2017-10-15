@@ -148,7 +148,7 @@ public class DownloadXMLService extends IntentService {
         }else{
             updateItem(pk, file_output.getPath());
         }
-        sendBroadcast(DOWNLOAD_BROADCAST);
+        sendBroadcast(UPDATE_DATA_BROADCAST);
     }
 
     private void sendBroadcast(String action){
