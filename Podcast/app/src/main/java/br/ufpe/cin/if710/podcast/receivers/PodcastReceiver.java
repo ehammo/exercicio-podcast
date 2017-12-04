@@ -57,11 +57,11 @@ public class PodcastReceiver extends BroadcastReceiver {
 
     public void notifyUser(){
         if(PodcastApp.isActivityVisible()){
-            Log.d("receiver","is_visible");
+//            Log.d("receiver","is_visible");
             Toast.makeText(mContext, "Updating XML items from service", Toast.LENGTH_SHORT).show();
             getFromDatabase();
         }else{
-            Log.d("receiver","Notification");
+//            Log.d("receiver","Notification");
             final Intent notificationIntent = new Intent(mContext, MainActivity.class);
             final PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, notificationIntent, 0);
 
@@ -73,7 +73,7 @@ public class PodcastReceiver extends BroadcastReceiver {
                     .setContentIntent(pendingIntent).build();
 
             NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
-            Log.d("receiver","notify");
+//            Log.d("receiver","notify");
             notificationManager.notify(1, notification);
         }
     }

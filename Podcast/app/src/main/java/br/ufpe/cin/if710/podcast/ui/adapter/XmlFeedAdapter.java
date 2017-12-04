@@ -131,7 +131,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
                 }
 
                 else if (((Button)view).getText() == "Continue") {
-                    Log.d("Adapter", currentItem.getCurrentTime()+"");
+//                    Log.d("Adapter", currentItem.getCurrentTime()+"");
                     mediaPlayer.seekTo(currentItem.getCurrentTime());
                     mediaPlayer.start();
                     ((Button)view).setText("Pause");
@@ -194,7 +194,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
             }
         }
         else {
-            Log.d("Adapter", currentItem.getTitle()+" "+currentItem.getUri());
+//            Log.d("Adapter", currentItem.getTitle()+" "+currentItem.getUri());
             if(DownloadXMLService.isDownloading && DownloadXMLService.currentDownloadingItem.equals(currentItem.getDownloadLink())){
                 this.holder.item_Btn.setText("Downloading");
                 this.holder.item_Btn.setBackgroundColor(Color.BLUE);
@@ -222,7 +222,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
             }
         });
         final Uri item_uri = Uri.parse(currentItem.getUri());
-        Log.d("Adapter","Boolean: "+!(item_uri.toString().equals("NONE")));
+//        Log.d("Adapter","Boolean: "+!(item_uri.toString().equals("NONE")));
 
 
         this.holder.item_Btn.setOnClickListener(new MyOnClickListener(currentItem, mContext, item_uri));
@@ -232,7 +232,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 
     public void fixMediaPlayer(Uri item_uri, ItemFeed currentItem){
         if (Util.getMPReg().get(currentItem.getLink())==null && !(item_uri.toString().equals("NONE"))) {
-            Log.d("Adapter","enter");
+//            Log.d("Adapter","enter");
             MediaPlayer mediaPlayer = MediaPlayer.create(mContext, item_uri);
             mediaPlayer.setLooping(false);
             mediaPlayer.setOnCompletionListener(new MyOnCompletedListener(holder.item_Btn, currentItem));

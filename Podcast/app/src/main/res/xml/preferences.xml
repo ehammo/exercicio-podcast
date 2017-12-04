@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:key="@+id/pref_screen">
+    android:key="pref_screen"
+    android:title="@+id/pref_screen"
+    >
 
     <EditTextPreference
         android:dialogTitle="@string/pref_title"

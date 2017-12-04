@@ -15,6 +15,7 @@ public class SettingsActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+        System.gc();
     }
 
     public static class FeedPreferenceFragment extends PreferenceFragment {

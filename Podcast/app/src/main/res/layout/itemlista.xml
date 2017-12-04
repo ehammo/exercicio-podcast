@@ -10,6 +10,7 @@
 
         <TextView
             android:id="@+id/item_title"
+            android:text="titulo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="8"
@@ -24,6 +25,7 @@
     </LinearLayout>
 
     <TextView
+        android:text="data"
         android:id="@+id/item_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

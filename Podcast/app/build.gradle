@@ -1,8 +1,9 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.frogermcs.androiddevmetrics'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "br.ufpe.cin.if710.podcast"
         minSdkVersion 19
@@ -26,5 +27,12 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:26.0.1'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    debugCompile 'com.squareup.leakcanary:leakcanary-android:1.5.4'
+    releaseCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5.4'
+    // Obrigatório para testes de unidade locais (framework JUnit 4)
     testCompile 'junit:junit:4.12'
+
+    // Obrigatório para testes instrumentados
+    androidTestCompile 'com.android.support:support-annotations:24.0.0'
+    androidTestCompile 'com.android.support.test:runner:0.5'
 }

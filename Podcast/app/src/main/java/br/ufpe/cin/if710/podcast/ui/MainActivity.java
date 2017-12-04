@@ -76,6 +76,7 @@ public class MainActivity extends Activity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
+
             startActivity(new Intent(this,SettingsActivity.class));
         }
 
@@ -95,7 +96,7 @@ public class MainActivity extends Activity {
         );
 
         // Calls service to download podcasts info
-        Log.d("Main","onStart");
+//        Log.d("Main","onStart");
         if(Util.hasPermissions(this, permissions)) {
             if (!DownloadXMLService.isDownloading) {
                 podcastReceiver.getFromDatabase();
@@ -124,21 +125,21 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("Main","onResume");
+//        Log.d("Main","onResume");
         PodcastApp.activityResumed();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d("Main","onPause");
+//        Log.d("Main","onPause");
         PodcastApp.activityPaused();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d("Main","onStop");
+//        Log.d("Main","onStop");
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(podcastReceiver);
 

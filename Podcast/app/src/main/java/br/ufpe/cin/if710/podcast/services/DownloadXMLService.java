@@ -56,7 +56,7 @@ public class DownloadXMLService extends IntentService {
     }
 
     public static void startActionGetData(Context context, String feedLink) {
-        Log.d("service","getData");
+//        Log.d("service","getData");
         Intent intent = new Intent(context, DownloadXMLService.class);
         intent.setAction(ACTION_GET_DATA);
         intent.putExtra(PARAM1, feedLink);
@@ -75,12 +75,12 @@ public class DownloadXMLService extends IntentService {
 
     @Override
     public void onHandleIntent(Intent intent) {
-        Log.d("service","Service onHandleIntent");
+//        Log.d("service","Service onHandleIntent");
         if (intent != null) {
-            Log.d("service","intent notNull");
+//            Log.d("service","intent notNull");
             final String action = intent.getAction();
             if (ACTION_GET_DATA.equals(action)) {
-                Log.d("service","getData");
+//                Log.d("service","getData");
                 final String feedLink = intent.getStringExtra(PARAM1);
                 try {
                     handleActionGetData(feedLink);
@@ -88,8 +88,8 @@ public class DownloadXMLService extends IntentService {
                     e.printStackTrace();
                 }
             } else if (ACTION_DOWNLOAD_PODCAST.equals(action)) {
-                Log.d("service", "download");
-                Log.d("service", intent.getData().getLastPathSegment());
+//                Log.d("service", "download");
+//                Log.d("service", intent.getData().getLastPathSegment());
 
                 final String pk = intent.getStringExtra(PARAM1);
                 final Uri uri = intent.getData();
@@ -101,7 +101,7 @@ public class DownloadXMLService extends IntentService {
 
 
     private void handleActionGetData(String feed) throws IOException, XmlPullParserException {
-        Log.d("service","getDataStart");
+//        Log.d("service","getDataStart");
         List<ItemFeed> itemList = new ArrayList<>();
 
         if(Util.isNetworkAvailable(getApplicationContext())) {
@@ -139,8 +139,8 @@ public class DownloadXMLService extends IntentService {
         File file_output = new File(root, uri.getLastPathSegment());
 
         if (!file_output.exists()) {
-            Log.d("service","exists");
-            Log.d("service","download");
+//            Log.d("service","exists");
+//            Log.d("service","download");
             downloadItem(file_output.getPath(),uri.toString());
             isDownloading = false;
             currentDownloadingItem = "NONE";
@@ -153,7 +153,7 @@ public class DownloadXMLService extends IntentService {
 
     private void sendBroadcast(String action){
         Intent intent = new Intent(action);
-        Log.d("service","broadcast");
+//        Log.d("service","broadcast");
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
@@ -163,15 +163,15 @@ public class DownloadXMLService extends IntentService {
         FileOutputStream fos = null;
         BufferedOutputStream out = null;
         try {
-            Log.d("service", "conexao");
+//            Log.d("service", "conexao");
             URL url = new URL(uriToString);
-            Log.d("service", "url: "+url);
+//            Log.d("service", "url: "+url);
             c = (HttpURLConnection) url.openConnection();
             fos = new FileOutputStream(path);
             out = new BufferedOutputStream(fos);
-            Log.d("service", "start podcast service");
+//            Log.d("service", "start podcast service");
 
-            Log.d("service", "download starting");
+//            Log.d("service", "download starting");
             InputStream in = c.getInputStream();
 
             byte[] buffer = new byte[8192];
@@ -179,9 +179,9 @@ public class DownloadXMLService extends IntentService {
             int count = 0;
             while ((len = in.read(buffer)) >= 0) {
                 out.write(buffer, 0, len);
-                if (count % 100 == 0) {
-                    Log.d("service", "Buffer " + count);
-                }
+//                if (count % 100 == 0) {
+//                    Log.d("service", "Buffer " + count);
+//                }
                 count++;
             }
             out.flush();
@@ -192,7 +192,7 @@ public class DownloadXMLService extends IntentService {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            Log.d("service", "download ended");
+//            Log.d("service", "download ended");
             try {
                 fos.getFD().sync();
                 out.close();
@@ -205,8 +205,8 @@ public class DownloadXMLService extends IntentService {
     }
 
     private void updateItem(String pk, String path){
-        Log.d("service","update");
-        Log.d("service","path="+path);
+//        Log.d("service","update");
+//        Log.d("service","path="+path);
         // Atualizar URI do podcast baixado (no banco de dados)
         ContentValues content = new ContentValues();
         content.put(PodcastDBHelper.EPISODE_FILE_URI, path);

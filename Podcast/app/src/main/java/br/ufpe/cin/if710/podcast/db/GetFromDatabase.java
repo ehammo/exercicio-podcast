@@ -37,7 +37,7 @@ public class GetFromDatabase extends AsyncTask<Object, Void, List<ItemFeed>> {
 
     @Override
     protected List<ItemFeed> doInBackground(Object... params) {
-        Log.d("task","task start");
+//        Log.d("task","task start");
         List<ItemFeed> itemList = new ArrayList<>();
         Cursor queryCursor = mContext.getContentResolver().query(
                 PodcastProviderContract.EPISODE_LIST_URI,
@@ -56,7 +56,7 @@ public class GetFromDatabase extends AsyncTask<Object, Void, List<ItemFeed>> {
             itemList.add(new ItemFeed(item_title, item_link, item_date, item_description, item_download_link, item_uri, item_time));
 
         }
-        Log.d("task","task ended");
+//        Log.d("task","task ended");
         return itemList;
     }
 
