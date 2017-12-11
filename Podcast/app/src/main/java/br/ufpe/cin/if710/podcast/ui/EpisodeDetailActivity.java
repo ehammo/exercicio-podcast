@@ -14,8 +14,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.squareup.leakcanary.RefWatcher;
+
 import java.io.File;
 
+import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.Util;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
@@ -36,6 +39,9 @@ public class EpisodeDetailActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_episode_detail);
+
+        RefWatcher refWatcher = PodcastApp.getRefWatcher(getApplicationContext());
+        refWatcher.watch(this);
 
         this.mTitleTV = findViewById(R.id.title_tv);
         this.mEpisodeLink = findViewById(R.id.link_tv);

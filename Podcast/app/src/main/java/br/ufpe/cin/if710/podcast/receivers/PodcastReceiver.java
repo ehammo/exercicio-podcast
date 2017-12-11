@@ -58,7 +58,7 @@ public class PodcastReceiver extends BroadcastReceiver {
     public void notifyUser(){
         if(PodcastApp.isActivityVisible()){
 //            Log.d("receiver","is_visible");
-            Toast.makeText(mContext, "Updating XML items from service", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mContext, "Updating XML items from service", Toast.LENGTH_SHORT).show();
             getFromDatabase();
         }else{
 //            Log.d("receiver","Notification");

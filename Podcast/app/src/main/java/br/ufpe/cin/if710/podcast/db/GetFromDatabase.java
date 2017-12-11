@@ -62,7 +62,7 @@ public class GetFromDatabase extends AsyncTask<Object, Void, List<ItemFeed>> {
 
     @Override
     protected void onPostExecute(List<ItemFeed> feed) {
-        Toast.makeText(mContext, "Getting data from DB", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(mContext, "Getting data from DB", Toast.LENGTH_SHORT).show();
 
         //Adapter Personalizado
         XmlFeedAdapter adapter = new XmlFeedAdapter(mContext, R.layout.itemlista, feed);

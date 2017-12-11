@@ -9,12 +9,17 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
+import android.widget.TextView;
+
+import com.squareup.haha.perflib.Main;
+import com.squareup.leakcanary.RefWatcher;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -59,6 +64,10 @@ public class MainActivity extends Activity {
         items = (ListView) findViewById(R.id.items);
         Util.verifyPermissions(this, permissions);
         podcastReceiver = new PodcastReceiver(this, items);
+
+        RefWatcher refWatcher = PodcastApp.getRefWatcher(getApplicationContext());
+        refWatcher.watch(this);
+
     }
 
     @Override
@@ -76,7 +85,6 @@ public class MainActivity extends Activity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-
             startActivity(new Intent(this,SettingsActivity.class));
         }
 

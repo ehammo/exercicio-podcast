@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 
+import com.squareup.leakcanary.RefWatcher;
+
+import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.R;
 
 public class SettingsActivity extends Activity {
@@ -15,7 +18,8 @@ public class SettingsActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        System.gc();
+        RefWatcher refWatcher = PodcastApp.getRefWatcher(getApplicationContext());
+        refWatcher.watch(this);
     }
 
     public static class FeedPreferenceFragment extends PreferenceFragment {
@@ -27,6 +31,8 @@ public class SettingsActivity extends Activity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+
+
 
             // carrega preferences de um recurso XML em /res/xml
             addPreferencesFromResource(R.xml.preferences);
