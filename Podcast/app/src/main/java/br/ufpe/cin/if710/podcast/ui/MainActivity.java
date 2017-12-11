@@ -64,10 +64,6 @@ public class MainActivity extends Activity {
         items = (ListView) findViewById(R.id.items);
         Util.verifyPermissions(this, permissions);
         podcastReceiver = new PodcastReceiver(this, items);
-
-        RefWatcher refWatcher = PodcastApp.getRefWatcher(getApplicationContext());
-        refWatcher.watch(this);
-
     }
 
     @Override
@@ -147,7 +143,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
-//        Log.d("Main","onStop");
+        Log.d("LeakCanary","m");
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(podcastReceiver);
 
@@ -156,6 +152,23 @@ public class MainActivity extends Activity {
     }
 
 
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        Log.d("LeakCanary", "MainActivity foi destruida");
+        RefWatcher refWatcher = PodcastApp.getRefWatcher(this);
+        refWatcher.watch(this);
+    }
 
 
+
+
+}
+class Cat {
+}
+class Box {
+    Cat hiddenCat;
+}
+class Docker {
+    static Box container;
 }

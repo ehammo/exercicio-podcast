@@ -39,10 +39,6 @@ public class EpisodeDetailActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_episode_detail);
-
-        RefWatcher refWatcher = PodcastApp.getRefWatcher(getApplicationContext());
-        refWatcher.watch(this);
-
         this.mTitleTV = findViewById(R.id.title_tv);
         this.mEpisodeLink = findViewById(R.id.link_tv);
         this.mDescTV = findViewById(R.id.description_tv);
@@ -65,7 +61,6 @@ public class EpisodeDetailActivity extends Activity {
         this.mEpisodeLink.setText(item.getLink());
 
         this.mDownloadBtn.setText("Download");
-        //todo:Transform download in a service and execute this service here
         this.mDownloadBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -82,5 +77,12 @@ public class EpisodeDetailActivity extends Activity {
                 }
             }
         });
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        RefWatcher refWatcher = PodcastApp.getRefWatcher(this);
+        refWatcher.watch(this);
     }
 }

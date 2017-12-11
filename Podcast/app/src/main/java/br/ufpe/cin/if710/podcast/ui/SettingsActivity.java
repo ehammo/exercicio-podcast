@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.util.Log;
 
 import com.squareup.leakcanary.RefWatcher;
 
@@ -18,7 +19,19 @@ public class SettingsActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        RefWatcher refWatcher = PodcastApp.getRefWatcher(getApplicationContext());
+    }
+
+    @Override
+    protected void onStop(){
+        super.onStop();
+        Log.d("LeakCanary","Settings parou");
+    }
+
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        Log.d("LeakCanary","Settings foi destruido");
+        RefWatcher refWatcher = PodcastApp.getRefWatcher(this);
         refWatcher.watch(this);
     }
 
@@ -27,13 +40,11 @@ public class SettingsActivity extends Activity {
         protected static final String TAG = "FeedPreferenceFragment";
         private SharedPreferences.OnSharedPreferenceChangeListener mListener;
         private Preference feedLinkPref;
+        private SharedPreferences prefs;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-
-
-
             // carrega preferences de um recurso XML em /res/xml
             addPreferencesFromResource(R.xml.preferences);
 
@@ -49,13 +60,26 @@ public class SettingsActivity extends Activity {
             };
 
             // pega objeto SharedPreferences gerenciado pelo PreferenceManager deste fragmento
-            SharedPreferences prefs = getPreferenceManager().getSharedPreferences();
+            prefs = getPreferenceManager().getSharedPreferences();
 
             // registra o listener no objeto SharedPreferences
             prefs.registerOnSharedPreferenceChangeListener(mListener);
 
             // força chamada ao metodo de callback para exibir link atual
             mListener.onSharedPreferenceChanged(prefs, FEED_LINK);
+        }
+
+        @Override
+        public void onStop(){
+            super.onStop();
+        }
+
+        @Override
+        public void onDestroy(){
+            super.onDestroy();
+            prefs.unregisterOnSharedPreferenceChangeListener(mListener);
+            RefWatcher refWatcher = PodcastApp.getRefWatcher(getActivity());
+            refWatcher.watch(this);
 
         }
     }

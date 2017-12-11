@@ -68,6 +68,7 @@ public class GetFromDatabase extends AsyncTask<Object, Void, List<ItemFeed>> {
         XmlFeedAdapter adapter = new XmlFeedAdapter(mContext, R.layout.itemlista, feed);
 
         //atualizar o list view
+        //Memory leak
         items.setAdapter(adapter);
         items.setTextFilterEnabled(true);
 
