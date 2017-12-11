@@ -3,39 +3,22 @@ package br.ufpe.cin.if710.podcast.ui;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.TextView;
 
-import com.squareup.haha.perflib.Main;
 import com.squareup.leakcanary.RefWatcher;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.List;
 
 import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.Util;
 import br.ufpe.cin.if710.podcast.receivers.PodcastReceiver;
 import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
-import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
-import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
-import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.ui.adapter.XmlFeedAdapter;
 
 import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.DOWNLOAD_BROADCAST;
@@ -47,21 +30,20 @@ public class MainActivity extends Activity {
     //ao fazer envio da resolucao, use este link no seu codigo!
     private final String RSS_FEED = "http://leopoldomt.com/if710/fronteirasdaciencia.xml";
     //TODO teste com outros links de podcast
-
-    private ListView items;
-    private PodcastReceiver podcastReceiver;
     private final String[] permissions = {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_NETWORK_STATE,
             Manifest.permission.INTERNET
     };
+    private ListView items;
+    private PodcastReceiver podcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        items = (ListView) findViewById(R.id.items);
+        items = findViewById(R.id.items);
         Util.verifyPermissions(this, permissions);
         podcastReceiver = new PodcastReceiver(this, items);
     }
@@ -101,28 +83,25 @@ public class MainActivity extends Activity {
 
         // Calls service to download podcasts info
 //        Log.d("Main","onStart");
-        if(Util.hasPermissions(this, permissions)) {
-            if (!DownloadXMLService.isDownloading) {
-                podcastReceiver.getFromDatabase();
-                DownloadXMLService.startActionGetData(this, RSS_FEED);
-            } else {
-                podcastReceiver.getFromDatabase();
-            }
-        }
+        getData();
 //        new DownloadXmlTask().execute(RSS_FEED);
     }
 
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
-        if(Util.hasPermissions(this, permissions)) {
+    public void getData() {
+        if (Util.hasPermissions(this, permissions)) {
             if (!DownloadXMLService.isDownloading) {
                 podcastReceiver.getFromDatabase();
                 DownloadXMLService.startActionGetData(this, RSS_FEED);
             } else {
                 podcastReceiver.getFromDatabase();
             }
-        }else{
+        } else {
             Util.verifyPermissions(this, permissions);
         }
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
+        getData();
     }
 
 
