@@ -122,7 +122,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d("LeakCanary","m");
+        Log.d("LeakCanary", "MainActivity parou");
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(podcastReceiver);
 
@@ -143,11 +143,11 @@ public class MainActivity extends Activity {
 
 
 }
-class Cat {
-}
-class Box {
-    Cat hiddenCat;
-}
-class Docker {
-    static Box container;
-}
+//class Cat {
+//}
+//class Box {
+//    Cat hiddenCat;
+//}
+//class Docker {
+//    static Box container;
+//}
