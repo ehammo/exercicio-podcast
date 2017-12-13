@@ -25,6 +25,7 @@ import br.ufpe.cin.if710.podcast.Util;
 import br.ufpe.cin.if710.podcast.db.entity.ItemFeedEntity;
 import br.ufpe.cin.if710.podcast.receivers.PodcastReceiver;
 import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
+import br.ufpe.cin.if710.podcast.services.ReceiverService;
 import br.ufpe.cin.if710.podcast.ui.adapter.XmlFeedAdapter;
 import br.ufpe.cin.if710.podcast.viewmodel.ItemFeedListViewModel;
 
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView items;
     private XmlFeedAdapter adapter;
     private PodcastReceiver podcastReceiver;
+    private Intent ReceiverSevice;
     private ItemFeedListViewModel viewModel;
 
     @Override
@@ -63,7 +65,10 @@ public class MainActivity extends AppCompatActivity {
         items.setAdapter(adapter);
         items.setTextFilterEnabled(true);
 
-        podcastReceiver = new PodcastReceiver(this, items);
+        podcastReceiver = new PodcastReceiver(this);
+        ReceiverSevice = new Intent(this, ReceiverService.class);
+        ReceiverSevice.putExtra("receiver", podcastReceiver);
+
 
         viewModel = ViewModelProviders.of(this).get(ItemFeedListViewModel.class);
 
@@ -108,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
                 podcastReceiver,
                 filter
         );
-
+        this.startService(ReceiverSevice);
         // Calls service to download podcasts info
         Log.d("Main", "onStart");
         getData();
@@ -168,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("LeakCanary", "MainActivity foi destruida");
         RefWatcher refWatcher = PodcastApp.getRefWatcher(this);
         refWatcher.watch(this);
+        this.stopService(ReceiverSevice);
         super.onDestroy();
     }
 

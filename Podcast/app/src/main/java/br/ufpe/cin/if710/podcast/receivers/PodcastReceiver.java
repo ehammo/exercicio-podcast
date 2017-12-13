@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.ListView;
 
+import java.io.Serializable;
+
 import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.ui.MainActivity;
 
@@ -18,14 +20,12 @@ import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.UPDATE_DATA_
 /**
  * Created by eduardo on 09/10/2017.
  */
-public class PodcastReceiver extends BroadcastReceiver {
+public class PodcastReceiver extends BroadcastReceiver implements Serializable {
 
     private Context mContext;
-    private ListView items;
 
-    public PodcastReceiver(Context context, ListView items){
+    public PodcastReceiver(Context context){
         mContext = context;
-        this.items = items;
     }
 
     public void onReceive(Context context, Intent intent) {
