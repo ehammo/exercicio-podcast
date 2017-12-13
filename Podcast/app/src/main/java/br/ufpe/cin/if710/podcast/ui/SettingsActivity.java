@@ -29,10 +29,10 @@ public class SettingsActivity extends Activity {
 
     @Override
     protected void onDestroy(){
-        super.onDestroy();
         Log.d("LeakCanary","Settings foi destruido");
         RefWatcher refWatcher = PodcastApp.getRefWatcher(this);
         refWatcher.watch(this);
+        super.onDestroy();
     }
 
     public static class FeedPreferenceFragment extends PreferenceFragment {
@@ -49,7 +49,7 @@ public class SettingsActivity extends Activity {
             addPreferencesFromResource(R.xml.preferences);
 
             // pega o valor atual de FeedLink
-            feedLinkPref = (Preference) getPreferenceManager().findPreference(FEED_LINK);
+            feedLinkPref = getPreferenceManager().findPreference(FEED_LINK);
 
             // cria listener para atualizar summary ao modificar link do feed
             mListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
@@ -71,16 +71,15 @@ public class SettingsActivity extends Activity {
 
         @Override
         public void onStop(){
+            prefs.unregisterOnSharedPreferenceChangeListener(mListener);
             super.onStop();
         }
 
         @Override
         public void onDestroy(){
-            super.onDestroy();
-            prefs.unregisterOnSharedPreferenceChangeListener(mListener);
             RefWatcher refWatcher = PodcastApp.getRefWatcher(getActivity());
             refWatcher.watch(this);
-
+            super.onDestroy();
         }
     }
 }

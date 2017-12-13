@@ -134,10 +134,10 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy(){
-        super.onDestroy();
         Log.d("LeakCanary", "MainActivity foi destruida");
         RefWatcher refWatcher = PodcastApp.getRefWatcher(this);
         refWatcher.watch(this);
+        super.onDestroy();
     }
 
 

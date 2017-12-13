@@ -1,14 +1,7 @@
 package br.ufpe.cin.if710.podcast.ui;
 
 import android.app.Activity;
-import android.content.ContentValues;
-import android.content.Context;
-import android.graphics.Color;
-import android.icu.text.UnicodeSetSpanner;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -20,12 +13,9 @@ import java.io.File;
 
 import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.R;
-import br.ufpe.cin.if710.podcast.Util;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
-import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
-import br.ufpe.cin.if710.podcast.ui.adapter.XmlFeedAdapter;
 
 public class EpisodeDetailActivity extends Activity {
 
@@ -81,8 +71,8 @@ public class EpisodeDetailActivity extends Activity {
 
     @Override
     public void onDestroy(){
-        super.onDestroy();
         RefWatcher refWatcher = PodcastApp.getRefWatcher(this);
         refWatcher.watch(this);
+        super.onDestroy();
     }
 }
