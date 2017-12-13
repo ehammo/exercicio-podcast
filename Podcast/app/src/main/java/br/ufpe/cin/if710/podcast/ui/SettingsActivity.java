@@ -71,12 +71,12 @@ public class SettingsActivity extends Activity {
 
         @Override
         public void onStop(){
-            prefs.unregisterOnSharedPreferenceChangeListener(mListener);
             super.onStop();
         }
 
         @Override
         public void onDestroy(){
+            prefs.unregisterOnSharedPreferenceChangeListener(mListener);
             RefWatcher refWatcher = PodcastApp.getRefWatcher(getActivity());
             refWatcher.watch(this);
             super.onDestroy();
