@@ -1,12 +1,12 @@
 package br.ufpe.cin.if710.podcast.services;
 
 import android.app.IntentService;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -23,11 +23,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.Util;
-import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
-import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
-import br.ufpe.cin.if710.podcast.domain.ItemFeed;
+import br.ufpe.cin.if710.podcast.db.entity.ItemFeedEntity;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
+import br.ufpe.cin.if710.podcast.model.ItemFeed;
 
 
 /**
@@ -61,7 +61,7 @@ public class DownloadXMLService extends IntentService {
         Intent intent = new Intent(context, DownloadXMLService.class);
         intent.setAction(ACTION_DOWNLOAD_PODCAST);
         currentDownloadingItem = item.getDownloadLink();
-        intent.putExtra(PARAM1, item.getLink());
+        intent.putExtra(PARAM1, item.getDownloadLink());
         intent.setData(Uri.parse(item.getDownloadLink()));
         context.startService(intent);
     }
@@ -93,34 +93,22 @@ public class DownloadXMLService extends IntentService {
     }
 
 
-
     private void handleActionGetData(String feed) throws IOException, XmlPullParserException {
 //        Log.d("service","getDataStart");
-        List<ItemFeed> itemList = new ArrayList<>();
+        List<ItemFeedEntity> itemFeedList = new ArrayList<>();
         //Caso eu tenha internet
-        if(Util.isNetworkAvailable(getApplicationContext())) {
+        if (Util.isNetworkAvailable(getApplicationContext())) {
             try {
                 // Usar parser para extrair itens provenientes do XML e salvá-los no banco de dados
                 //getRSSFeed faz o download da lista de episodios
-                itemList = XmlFeedParser.parse(getRssFeed(feed));
+                itemFeedList = XmlFeedParser.parse(getRssFeed(feed));
+
+                long[] x = ((PodcastApp) getApplicationContext()).getDatabase().itemFeedDAO().insertAll(itemFeedList);
+                Log.d("ARCINSERT", "" + x.length);
             } catch (XmlPullParserException e1) {
                 e1.printStackTrace();
             } catch (IOException e1) {
                 e1.printStackTrace();
-            }
-
-            for (ItemFeed item : itemList) {
-                ContentValues content = new ContentValues();
-
-                content.put(PodcastDBHelper.EPISODE_DATE, item.getPubDate());
-                content.put(PodcastDBHelper.EPISODE_DESC, item.getDescription());
-                content.put(PodcastDBHelper.EPISODE_DOWNLOAD_LINK, item.getDownloadLink());
-                content.put(PodcastDBHelper.EPISODE_LINK, item.getLink());
-                content.put(PodcastDBHelper.EPISODE_TITLE, item.getTitle());
-                content.put(PodcastDBHelper.EPISODE_FILE_URI, item.getUri());
-                content.put(PodcastDBHelper.EPISODE_CURRENT_TIME, item.getCurrentTime());
-
-                getContentResolver().insert(PodcastProviderContract.EPISODE_LIST_URI, content);
             }
         }
         sendBroadcast(UPDATE_DATA_BROADCAST);
@@ -136,23 +124,23 @@ public class DownloadXMLService extends IntentService {
         if (!file_output.exists()) {
 //            Log.d("service","exists");
 //            Log.d("service","download");
-            downloadItem(file_output.getPath(),uri.toString());
+            downloadItem(file_output.getPath(), uri.toString());
             isDownloading = false;
             currentDownloadingItem = "NONE";
             updateItem(pk, file_output.getPath());
-        }else{
+        } else {
             updateItem(pk, file_output.getPath());
         }
         sendBroadcast(UPDATE_DATA_BROADCAST);
     }
 
-    private void sendBroadcast(String action){
+    private void sendBroadcast(String action) {
         Intent intent = new Intent(action);
 //        Log.d("service","broadcast");
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    private void downloadItem(String path, String uriToString){
+    private void downloadItem(String path, String uriToString) {
         isDownloading = true;
         HttpURLConnection c = null;
         FileOutputStream fos = null;
@@ -200,17 +188,20 @@ public class DownloadXMLService extends IntentService {
         }
     }
 
-    private void updateItem(String pk, String path){
+    private void updateItem(String pk, String path) {
 //        Log.d("service","update");
 //        Log.d("service","path="+path);
+
+        ((PodcastApp) getApplicationContext()).getRepository().updateLiveItemUri(pk, path);
         // Atualizar URI do podcast baixado (no banco de dados)
-        ContentValues content = new ContentValues();
-        content.put(PodcastDBHelper.EPISODE_FILE_URI, path);
 
-        String selection = PodcastProviderContract.EPISODE_LINK + " = ?";
-        String[] selection_args = new String[]{pk};
-
-        getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI, content, selection, selection_args);
+//        ContentValues content = new ContentValues();
+//        content.put(PodcastDBHelper.EPISODE_FILE_URI, path);
+//
+//        String selection = PodcastProviderContract.EPISODE_LINK + " = ?";
+//        String[] selection_args = new String[]{pk};
+//
+//        getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI, content, selection, selection_args);
 
     }
 

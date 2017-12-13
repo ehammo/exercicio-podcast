@@ -10,7 +10,6 @@ import android.util.Log;
 import android.widget.ListView;
 
 import br.ufpe.cin.if710.podcast.PodcastApp;
-import br.ufpe.cin.if710.podcast.db.GetFromDatabase;
 import br.ufpe.cin.if710.podcast.ui.MainActivity;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
@@ -19,14 +18,10 @@ import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.UPDATE_DATA_
 /**
  * Created by eduardo on 09/10/2017.
  */
-
 public class PodcastReceiver extends BroadcastReceiver {
 
     private Context mContext;
     private ListView items;
-    private GetFromDatabase getFromDatabaseTask;
-
-    public PodcastReceiver(){}
 
     public PodcastReceiver(Context context, ListView items){
         mContext = context;
@@ -39,20 +34,13 @@ public class PodcastReceiver extends BroadcastReceiver {
             final String action = intent.getAction();
             if (UPDATE_DATA_BROADCAST.equals(action)) {
                 notifyUser();
-            }else{
-                getFromDatabase();
             }
         }
 
     }
 
     public void notifyUser(){
-        if(PodcastApp.isActivityVisible()){
-//            Log.d("receiver","is_visible");
-//            Toast.makeText(mContext, "Updating XML items from service", Toast.LENGTH_SHORT).show();
-            getFromDatabase();
-        }else{
-//            Log.d("receiver","Notification");
+        if(!PodcastApp.isActivityVisible()){
             final Intent notificationIntent = new Intent(mContext, MainActivity.class);
             final PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, notificationIntent, 0);
 
@@ -64,21 +52,8 @@ public class PodcastReceiver extends BroadcastReceiver {
                     .setContentIntent(pendingIntent).build();
 
             NotificationManager notificationManager = (NotificationManager) mContext.getSystemService(NOTIFICATION_SERVICE);
-//            Log.d("receiver","notify");
             notificationManager.notify(1, notification);
         }
     }
-
-    public void getFromDatabase(){
-        getFromDatabaseTask = new GetFromDatabase(mContext, items);
-        getFromDatabaseTask.execute();
-    }
-
-    public void cancelTask() {
-        if (getFromDatabaseTask != null) {
-            getFromDatabaseTask.cancel(true);
-        }
-    }
-
 
 }
