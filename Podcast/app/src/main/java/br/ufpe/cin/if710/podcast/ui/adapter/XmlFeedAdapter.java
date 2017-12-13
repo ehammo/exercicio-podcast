@@ -1,6 +1,5 @@
 package br.ufpe.cin.if710.podcast.ui.adapter;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -17,11 +16,10 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.List;
 
+import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.Util;
-import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
-import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
-import br.ufpe.cin.if710.podcast.domain.ItemFeed;
+import br.ufpe.cin.if710.podcast.model.ItemFeed;
 import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
 import br.ufpe.cin.if710.podcast.ui.EpisodeDetailActivity;
 
@@ -83,13 +81,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
             public void onClick(View view) {
                 Context context = getContext();
                 Intent intent = new Intent(context, EpisodeDetailActivity.class);
-                intent.putExtra(PodcastDBHelper.EPISODE_TITLE, item.getTitle());
-                intent.putExtra(PodcastDBHelper.EPISODE_LINK, item.getLink());
-                intent.putExtra(PodcastDBHelper.EPISODE_DESC, item.getDescription());
-                intent.putExtra(PodcastDBHelper.EPISODE_DATE, item.getPubDate());
-                intent.putExtra(PodcastDBHelper.EPISODE_DOWNLOAD_LINK, item.getDownloadLink());
-                intent.putExtra(PodcastDBHelper.EPISODE_FILE_URI, item.getUri());
-                intent.putExtra(PodcastDBHelper.EPISODE_CURRENT_TIME, item.getCurrentTime());
+                intent.putExtra("downloadLink", item.getDownloadLink());
 
                 context.startActivity(intent);
             }
@@ -137,7 +129,7 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 
 
 	/*
-	@Override
+    @Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		View rowView = inflater.inflate(R.layout.itemlista, parent, false);
@@ -149,33 +141,28 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
 
     //http://developer.android.com/training/improving-layouts/smooth-scrolling.html#ViewHolder
 
-    public class MyOnCompletedListener implements MediaPlayer.OnCompletionListener{
+    public class MyOnCompletedListener implements MediaPlayer.OnCompletionListener {
 
         ItemFeed item;
         Button btn;
 
-        public MyOnCompletedListener(Button btn, ItemFeed item){
+        public MyOnCompletedListener(Button btn, ItemFeed item) {
             this.btn = btn;
             this.item = item;
         }
 
-        public void onCompletion(MediaPlayer mp){
+        public void onCompletion(MediaPlayer mp) {
             btn.setText("Download");
             btn.setBackgroundColor(Color.GREEN);
 
             File file = new File(item.getUri());
             file.delete();
 
-            ContentValues cv = new ContentValues();
-            cv.put(PodcastDBHelper.EPISODE_FILE_URI, "NONE");
-            String selection = PodcastProviderContract.EPISODE_LINK + " = ?";
-            String[] selection_args = new String[]{item.getLink()};
-            Context mContext = getContext();
-            mContext.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI, cv, selection, selection_args);
+            ((PodcastApp) getContext().getApplicationContext()).getRepository().updateLiveItemUri(item.getDownloadLink(), "NONE");
         }
     }
 
-    public class MyOnClickListener implements View.OnClickListener{
+    public class MyOnClickListener implements View.OnClickListener {
 
         ItemFeed currentItem;
         Uri item_uri;
@@ -192,10 +179,9 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
                 String item_download_link = currentItem.getDownloadLink();
                 if (Util.isNetworkAvailable(mContext)) {
                     DownloadXMLService.startActionDownloadPodcast(mContext, currentItem);
-                    ((Button)view).setText("Downloading");
+                    ((Button) view).setText("Downloading");
                     view.setBackgroundColor(Color.BLUE);
-                }
-                else {
+                } else {
                     Toast.makeText(mContext, "There isn't a internet connection", Toast.LENGTH_SHORT).show();
                 }
             } else {
@@ -205,16 +191,14 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
                 MediaPlayer mediaPlayer = Util.getMPReg().get(currentItem.getLink());
                 Log.d("testeDePause", "get mediaplayer (" + (mediaPlayer != null) + ") ");
 
-                if (((Button)view).getText() == "Play" ) {
+                if (((Button) view).getText() == "Play") {
                     Log.d("testeDePause", "Play");
                     //bugged
 //                    Util.stopAllPlayers();
                     mediaPlayer.start();
-                    ((Button)view).setText("Pause");
+                    ((Button) view).setText("Pause");
                     view.setBackgroundColor(Color.GRAY);
-                }
-
-                else if (((Button)view).getText() == "Continue") {
+                } else if (((Button) view).getText() == "Continue") {
                     Log.d("testeDePause", "Continue");
                     //bugged
 //                    Util.stopAllPlayers();
@@ -222,26 +206,27 @@ public class XmlFeedAdapter extends ArrayAdapter<ItemFeed> {
                     mediaPlayer.seekTo(currentItem.getCurrentTime());
                     mediaPlayer.start();
                     Log.d("testeDePause", " is playing? " + mediaPlayer.isPlaying());
-                    ((Button)view).setText("Pause");
+                    ((Button) view).setText("Pause");
                     view.setBackgroundColor(Color.GRAY);
                 }
 
-                else if (((Button)view).getText() == "Pause") {
+                //TOOD Atualizar onPause
+                else if (((Button) view).getText() == "Pause") {
                     Log.d("testeDePause", "pause");
                     mediaPlayer.pause();
                     Util.stopAllPlayers();
                     Log.d("testeDePause", " is playing? " + mediaPlayer.isPlaying());
 
-                    ((Button)view).setText("Continue");
+                    ((Button) view).setText("Continue");
                     view.setBackgroundColor(Color.GREEN);
 
                     currentItem.setCurrentTime(mediaPlayer.getCurrentPosition());
 
-                    ContentValues cv = new ContentValues();
-                    cv.put(PodcastDBHelper.EPISODE_CURRENT_TIME, "" + currentItem.getCurrentTime());
-                    String selection = PodcastProviderContract.EPISODE_LINK + " = ?";
-                    String[] selection_args = new String[]{currentItem.getLink()};
-                    mContext.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI, cv, selection, selection_args);
+//                    ContentValues cv = new ContentValues();
+//                    cv.put(PodcastDBHelper.EPISODE_CURRENT_TIME, "" + currentItem.getCurrentTime());
+//                    String selection = PodcastProviderContract.EPISODE_LINK + " = ?";
+//                    String[] selection_args = new String[]{currentItem.getLink()};
+//                    mContext.getContentResolver().update(PodcastProviderContract.EPISODE_LIST_URI, cv, selection, selection_args);
                 }
             }
         }

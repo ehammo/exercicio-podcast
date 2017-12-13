@@ -1,7 +1,9 @@
 package br.ufpe.cin.if710.podcast.ui;
 
-import android.app.Activity;
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -13,11 +15,11 @@ import java.io.File;
 
 import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.R;
-import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
-import br.ufpe.cin.if710.podcast.domain.ItemFeed;
+import br.ufpe.cin.if710.podcast.db.entity.ItemFeedEntity;
 import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
+import br.ufpe.cin.if710.podcast.viewmodel.ItemFeedViewModel;
 
-public class EpisodeDetailActivity extends Activity {
+public class EpisodeDetailActivity extends AppCompatActivity {
 
     private TextView mTitleTV;
     private TextView mDescTV;
@@ -28,6 +30,7 @@ public class EpisodeDetailActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.Theme_AppCompat_DayNight);
         setContentView(R.layout.activity_episode_detail);
         this.mTitleTV = findViewById(R.id.title_tv);
         this.mEpisodeLink = findViewById(R.id.link_tv);
@@ -37,40 +40,43 @@ public class EpisodeDetailActivity extends Activity {
 
         final Bundle bundle = this.getIntent().getExtras();
 
-        final ItemFeed item = new ItemFeed(bundle.getString(PodcastDBHelper.EPISODE_TITLE),
-                bundle.getString(PodcastDBHelper.EPISODE_LINK),
-                bundle.getString(PodcastDBHelper.EPISODE_DATE),
-                bundle.getString(PodcastDBHelper.EPISODE_DESC),
-                bundle.getString(PodcastDBHelper.EPISODE_DOWNLOAD_LINK),
-                bundle.getString(PodcastDBHelper.EPISODE_FILE_URI),
-                bundle.getInt(PodcastDBHelper.EPISODE_CURRENT_TIME));
+        final String downloadLink = bundle.getString("downloadLink");
 
-        this.mTitleTV.setText(item.getTitle());
-        this.mDescTV.setText(item.getDescription());
-        this.mDateTV.setText(item.getPubDate());
-        this.mEpisodeLink.setText(item.getLink());
+        ItemFeedViewModel.Factory factory = new ItemFeedViewModel.Factory(getApplication(), downloadLink);
 
-        this.mDownloadBtn.setText("Download");
-        this.mDownloadBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                File file = new File(item.getUri());
-                if(!file.exists()){
-                    if(!DownloadXMLService.isDownloading){
-                        Toast.makeText(getApplicationContext(), "Starting download", Toast.LENGTH_LONG).show();
-                        DownloadXMLService.startActionDownloadPodcast(getApplicationContext(), item);
-                    }else{
-                        Toast.makeText(getApplicationContext(), "Already downloading", Toast.LENGTH_LONG).show();
+        final ItemFeedViewModel viewModel = ViewModelProviders.of(this, factory).get(ItemFeedViewModel.class);
+
+        viewModel.getItemFeed().observe(this,
+                (@Nullable ItemFeedEntity itemFeed) -> {
+                    if (itemFeed != null) {
+                        this.mTitleTV.setText(itemFeed.getTitle());
+                        this.mDescTV.setText(itemFeed.getDescription());
+                        this.mDateTV.setText(itemFeed.getPubDate());
+                        this.mEpisodeLink.setText(itemFeed.getLink());
+
+                        this.mDownloadBtn.setText("Download");
+                        this.mDownloadBtn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                File file = new File(itemFeed.getUri());
+                                if (!file.exists()) {
+                                    if (!DownloadXMLService.isDownloading) {
+                                        Toast.makeText(getApplicationContext(), "Starting download", Toast.LENGTH_LONG).show();
+                                        DownloadXMLService.startActionDownloadPodcast(getApplicationContext(), itemFeed);
+                                    } else {
+                                        Toast.makeText(getApplicationContext(), "Already downloading", Toast.LENGTH_LONG).show();
+                                    }
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Already downloaded", Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
                     }
-                }else{
-                    Toast.makeText(getApplicationContext(), "Already downloaded", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
+                });
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         RefWatcher refWatcher = PodcastApp.getRefWatcher(this);
         refWatcher.watch(this);
         super.onDestroy();

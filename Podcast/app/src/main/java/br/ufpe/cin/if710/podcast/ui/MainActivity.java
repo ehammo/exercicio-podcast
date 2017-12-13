@@ -2,11 +2,13 @@ package br.ufpe.cin.if710.podcast.ui;
 
 
 import android.Manifest;
-import android.app.Activity;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,18 +16,23 @@ import android.widget.ListView;
 
 import com.squareup.leakcanary.RefWatcher;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.R;
 import br.ufpe.cin.if710.podcast.Util;
+import br.ufpe.cin.if710.podcast.db.entity.ItemFeedEntity;
 import br.ufpe.cin.if710.podcast.receivers.PodcastReceiver;
 import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
 import br.ufpe.cin.if710.podcast.ui.adapter.XmlFeedAdapter;
+import br.ufpe.cin.if710.podcast.viewmodel.ItemFeedListViewModel;
 
 import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.DOWNLOAD_BROADCAST;
 import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.GET_DATA_BROADCAST;
 import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.UPDATE_DATA_BROADCAST;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     //ao fazer envio da resolucao, use este link no seu codigo!
     private final String RSS_FEED = "http://leopoldomt.com/if710/fronteirasdaciencia.xml";
@@ -37,15 +44,36 @@ public class MainActivity extends Activity {
             Manifest.permission.INTERNET
     };
     private ListView items;
+    private XmlFeedAdapter adapter;
     private PodcastReceiver podcastReceiver;
+    private ItemFeedListViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.Theme_AppCompat_DayNight);
         setContentView(R.layout.activity_main);
-        items = findViewById(R.id.items);
+//        setContentView(R.layout.activity_main);
+
         Util.verifyPermissions(this, permissions);
+
+        adapter = new XmlFeedAdapter(getApplicationContext(), R.layout.itemlista, new ArrayList<>());
+
+        items = findViewById(R.id.items);
+        items.setAdapter(adapter);
+        items.setTextFilterEnabled(true);
+
         podcastReceiver = new PodcastReceiver(this, items);
+
+        viewModel = ViewModelProviders.of(this).get(ItemFeedListViewModel.class);
+
+        viewModel.getItemFeedList().observe(this,
+                (@Nullable List<ItemFeedEntity> itemFeedList) -> {
+                    if (itemFeedList != null) {
+                        adapter.clear();
+                        adapter.addAll(itemFeedList);
+                    }
+                });
     }
 
     @Override
@@ -63,7 +91,7 @@ public class MainActivity extends Activity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            startActivity(new Intent(this,SettingsActivity.class));
+            startActivity(new Intent(this, SettingsActivity.class));
         }
 
         return super.onOptionsItemSelected(item);
@@ -78,11 +106,11 @@ public class MainActivity extends Activity {
         filter.addAction(UPDATE_DATA_BROADCAST);
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 podcastReceiver,
-               filter
+                filter
         );
 
         // Calls service to download podcasts info
-//        Log.d("Main","onStart");
+        Log.d("Main", "onStart");
         getData();
 //        new DownloadXmlTask().execute(RSS_FEED);
     }
@@ -90,17 +118,17 @@ public class MainActivity extends Activity {
     public void getData() {
         if (Util.hasPermissions(this, permissions)) {
             if (!DownloadXMLService.isDownloading) {
-                podcastReceiver.getFromDatabase();
+//                podcastReceiver.getFromDatabase();
                 DownloadXMLService.startActionGetData(this, RSS_FEED);
             } else {
-                podcastReceiver.getFromDatabase();
+//                podcastReceiver.getFromDatabase();
             }
         } else {
             Util.verifyPermissions(this, permissions);
         }
     }
 
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         getData();
     }
 
@@ -109,6 +137,10 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
 //        Log.d("Main","onResume");
+        if (viewModel.getItemFeedList().getValue() != null) {
+            adapter.clear();
+            adapter.addAll(viewModel.getItemFeedList().getValue());
+        }
         PodcastApp.activityResumed();
     }
 
@@ -123,7 +155,6 @@ public class MainActivity extends Activity {
     protected void onStop() {
         super.onStop();
         Log.d("LeakCanary", "MainActivity parou");
-        podcastReceiver.cancelTask();
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(podcastReceiver);
 
@@ -133,14 +164,12 @@ public class MainActivity extends Activity {
 
 
     @Override
-    protected void onDestroy(){
+    protected void onDestroy() {
         Log.d("LeakCanary", "MainActivity foi destruida");
         RefWatcher refWatcher = PodcastApp.getRefWatcher(this);
         refWatcher.watch(this);
         super.onDestroy();
     }
-
-
 
 
 }

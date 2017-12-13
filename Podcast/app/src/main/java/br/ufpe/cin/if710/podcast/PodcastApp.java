@@ -7,6 +7,8 @@ import com.frogermcs.androiddevmetrics.AndroidDevMetrics;
 import com.squareup.leakcanary.LeakCanary;
 import com.squareup.leakcanary.RefWatcher;
 
+import br.ufpe.cin.if710.podcast.db.AppDatabase;
+
 /**
  * Created by eduardo on 15/10/2017.
  */
@@ -47,5 +49,13 @@ public class PodcastApp extends Application {
             AndroidDevMetrics.initWith(this);
         }
 
+    }
+
+    public AppDatabase getDatabase(){
+        return AppDatabase.getInstance(this);
+    }
+
+    public DataRepository getRepository(){
+        return DataRepository.getInstance(getDatabase());
     }
 }
