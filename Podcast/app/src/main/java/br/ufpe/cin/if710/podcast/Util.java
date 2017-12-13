@@ -8,11 +8,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
+import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,16 +27,30 @@ public class Util {
     }
 
     public static void stopAllPlayers(){
-
+        Log.d("testeDePause", "Tentou pausar");
         Set<Map.Entry<String, MediaPlayer>> entrySet = mediaPlayerRegistry.entrySet();
-        Iterator iter = entrySet.iterator();
-
-        while (iter.hasNext()) {
-            MediaPlayer player = (MediaPlayer) iter.next();
+        for (Map.Entry<String, MediaPlayer> entry : entrySet) {
+            MediaPlayer player = entry.getValue();
+            Log.d("testeDePause", "Utilpodcast " + entry.getKey());
+            Log.d("testeDePause", "UtilplayerExists " + (player != null));
+            if (player != null) {
+                Log.d("testeDePause", "UtilplayerIsPlaying " + (player.isPlaying()));
+            }
             if (player != null && player.isPlaying()) {
-                player.release();
+                Log.d("testeDePause", "Utilpausou " + entry.getKey());
+                player.pause();
             }
         }
+        Log.d("testeDePause", mediaPlayerRegistry.size() + " ");
+
+//        Iterator iter = entrySet.iterator();
+//
+//        while (iter.hasNext()) {
+//            MediaPlayer player = (MediaPlayer) iter.next();
+//            if (player != null && player.isPlaying()) {
+//                player.release();
+//            }
+//        }
         mediaPlayerRegistry.clear();
 
     }

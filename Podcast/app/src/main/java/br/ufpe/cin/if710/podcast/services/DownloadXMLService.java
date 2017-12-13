@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
-import android.widget.Toast;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -22,17 +20,14 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.net.ssl.HttpsURLConnection;
-
+import br.ufpe.cin.if710.podcast.Util;
 import br.ufpe.cin.if710.podcast.db.PodcastDBHelper;
 import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.domain.XmlFeedParser;
-import br.ufpe.cin.if710.podcast.Util;
 
 
 /**
@@ -41,13 +36,12 @@ import br.ufpe.cin.if710.podcast.Util;
 
 public class DownloadXMLService extends IntentService {
 
-    private static final String ACTION_GET_DATA = "br.ufpe.cin.if710.podcast.services.action.ACTION_GET_DATA";
-    private static final String ACTION_DOWNLOAD_PODCAST = "br.ufpe.cin.if710.podcast.services.action.ACTION_DOWNLOAD_PODCAST";
-    private static final String PARAM1 = "br.ufpe.cin.if710.podcast.services.extra.PARAM1";
     public static final String GET_DATA_BROADCAST = "br.ufpe.cin.if710.broadcasts.GET_DATA_BROADCAST";
     public static final String UPDATE_DATA_BROADCAST = "br.ufpe.cin.if710.broadcasts.UPDATE_DATA_BROADCAST";
     public static final String DOWNLOAD_BROADCAST = "br.ufpe.cin.if710.broadcasts.DOWNLOAD_BROADCAST";
-
+    private static final String ACTION_GET_DATA = "br.ufpe.cin.if710.podcast.services.action.ACTION_GET_DATA";
+    private static final String ACTION_DOWNLOAD_PODCAST = "br.ufpe.cin.if710.podcast.services.action.ACTION_DOWNLOAD_PODCAST";
+    private static final String PARAM1 = "br.ufpe.cin.if710.podcast.services.extra.PARAM1";
     public static boolean isDownloading = false;
     public static String currentDownloadingItem = "NONE";
 
@@ -103,10 +97,11 @@ public class DownloadXMLService extends IntentService {
     private void handleActionGetData(String feed) throws IOException, XmlPullParserException {
 //        Log.d("service","getDataStart");
         List<ItemFeed> itemList = new ArrayList<>();
-
+        //Caso eu tenha internet
         if(Util.isNetworkAvailable(getApplicationContext())) {
             try {
                 // Usar parser para extrair itens provenientes do XML e salvá-los no banco de dados
+                //getRSSFeed faz o download da lista de episodios
                 itemList = XmlFeedParser.parse(getRssFeed(feed));
             } catch (XmlPullParserException e1) {
                 e1.printStackTrace();
@@ -174,7 +169,7 @@ public class DownloadXMLService extends IntentService {
 //            Log.d("service", "download starting");
             InputStream in = c.getInputStream();
 
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[16384];
             int len = 0;
             int count = 0;
             while ((len = in.read(buffer)) >= 0) {
@@ -183,6 +178,7 @@ public class DownloadXMLService extends IntentService {
 //                    Log.d("service", "Buffer " + count);
 //                }
                 count++;
+                isDownloading = true;
             }
             out.flush();
         } catch (FileNotFoundException e) {

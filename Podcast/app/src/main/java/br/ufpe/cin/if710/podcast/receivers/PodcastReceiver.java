@@ -6,24 +6,14 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.util.Log;
 import android.widget.ListView;
-import android.widget.Toast;
-
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
-import java.lang.reflect.GenericArrayType;
 
 import br.ufpe.cin.if710.podcast.PodcastApp;
 import br.ufpe.cin.if710.podcast.db.GetFromDatabase;
-import br.ufpe.cin.if710.podcast.services.DownloadXMLService;
 import br.ufpe.cin.if710.podcast.ui.MainActivity;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
-import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.DOWNLOAD_BROADCAST;
-import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.GET_DATA_BROADCAST;
 import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.UPDATE_DATA_BROADCAST;
 
 /**
@@ -32,8 +22,9 @@ import static br.ufpe.cin.if710.podcast.services.DownloadXMLService.UPDATE_DATA_
 
 public class PodcastReceiver extends BroadcastReceiver {
 
-    Context mContext;
-    ListView items;
+    private Context mContext;
+    private ListView items;
+    private GetFromDatabase getFromDatabaseTask;
 
     public PodcastReceiver(){}
 
@@ -79,6 +70,15 @@ public class PodcastReceiver extends BroadcastReceiver {
     }
 
     public void getFromDatabase(){
-        (new GetFromDatabase(mContext, items)).execute();
+        getFromDatabaseTask = new GetFromDatabase(mContext, items);
+        getFromDatabaseTask.execute();
     }
+
+    public void cancelTask() {
+        if (getFromDatabaseTask != null) {
+            getFromDatabaseTask.cancel(true);
+        }
+    }
+
+
 }

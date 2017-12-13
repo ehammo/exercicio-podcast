@@ -3,17 +3,12 @@ package br.ufpe.cin.if710.podcast.db;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.widget.ListView;
-import android.widget.Toast;
-
-import org.apache.http.conn.ConnectTimeoutException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import br.ufpe.cin.if710.podcast.R;
-import br.ufpe.cin.if710.podcast.db.PodcastProviderContract;
 import br.ufpe.cin.if710.podcast.domain.ItemFeed;
 import br.ufpe.cin.if710.podcast.ui.adapter.XmlFeedAdapter;
 
@@ -56,6 +51,7 @@ public class GetFromDatabase extends AsyncTask<Object, Void, List<ItemFeed>> {
             itemList.add(new ItemFeed(item_title, item_link, item_date, item_description, item_download_link, item_uri, item_time));
 
         }
+        queryCursor.close();
 //        Log.d("task","task ended");
         return itemList;
     }

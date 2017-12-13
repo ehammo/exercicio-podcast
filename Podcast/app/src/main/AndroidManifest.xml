@@ -36,7 +36,8 @@
         <receiver
             android:name=".receivers.PodcastReceiver"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true"
+            android:permission="" />
 
     </application>
 

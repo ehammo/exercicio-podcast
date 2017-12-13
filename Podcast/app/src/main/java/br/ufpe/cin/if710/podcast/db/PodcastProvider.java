@@ -9,8 +9,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
 
-import br.ufpe.cin.if710.podcast.domain.ItemFeed;
-
 public class PodcastProvider extends ContentProvider {
 
     private PodcastDBHelper mPodcastDBHelper;
@@ -52,7 +50,7 @@ public class PodcastProvider extends ContentProvider {
 
             Cursor cursor = query(uri, null, link+" = ?", new String[]{values.getAsString(link)}, null);
             int count = cursor.getCount();
-
+            cursor.close();
             if(count<=0){
                 Log.d("PodcastProvider",values.getAsString(link));
 
@@ -83,7 +81,6 @@ public class PodcastProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        // TODO: Implement this to initialize your content provider on startup.
         mContext = this.getContext();
         mPodcastDBHelper = PodcastDBHelper.getInstance(mContext);
         return true;

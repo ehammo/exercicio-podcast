@@ -123,6 +123,7 @@ public class MainActivity extends Activity {
     protected void onStop() {
         super.onStop();
         Log.d("LeakCanary", "MainActivity parou");
+        podcastReceiver.cancelTask();
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(podcastReceiver);
 
