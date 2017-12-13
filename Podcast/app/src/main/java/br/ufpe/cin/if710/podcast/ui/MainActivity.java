@@ -2,7 +2,6 @@ package br.ufpe.cin.if710.podcast.ui;
 
 
 import android.Manifest;
-import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -66,28 +65,13 @@ public class MainActivity extends AppCompatActivity {
 
         podcastReceiver = new PodcastReceiver(this, items);
 
-        LiveData<List<ItemFeedEntity>> itemFeedListLiveData = ((PodcastApp) getApplication()).getDatabase().itemFeedDAO().getAll();
-        itemFeedListLiveData.observe(this,
-                (@Nullable List<ItemFeedEntity> itemFeedList) -> {
-                    if (itemFeedList != null) {
-                        adapter.clear();
-                        adapter.addAll(itemFeedList);
-                        Log.d("ARCCOMPLIVEDATA", "" + itemFeedList.size());
-                    } else {
-                        Log.d("ARCCOMPLIVEDATA", "VAZIO");
-                    }
-                });
-
         viewModel = ViewModelProviders.of(this).get(ItemFeedListViewModel.class);
 
         viewModel.getItemFeedList().observe(this,
                 (@Nullable List<ItemFeedEntity> itemFeedList) -> {
                     if (itemFeedList != null) {
-//                        adapter.clear();
-//                        adapter.addAll(itemFeedList);
-                        Log.d("ARCCOMPVIEWMODEL", "" + itemFeedList.size());
-                    } else {
-                        Log.d("ARCCOMPVIEWMODEL", "VAZIO");
+                        adapter.clear();
+                        adapter.addAll(itemFeedList);
                     }
                 });
     }

@@ -2,9 +2,6 @@ package br.ufpe.cin.if710.podcast;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
-import android.arch.lifecycle.Observer;
-import android.support.annotation.Nullable;
-import android.util.Log;
 
 import java.util.List;
 
@@ -28,18 +25,10 @@ public class DataRepository {
 
         mObservableItemFeedList = new MediatorLiveData<>();
 
-        mObservableItemFeedList.addSource(mDatabase.itemFeedDAO().getAll(), new Observer<List<ItemFeedEntity>>() {
-
-            @Override
-            public void onChanged(@Nullable List<ItemFeedEntity> itemFeedList) {
-                if (mDatabase == null) {
-                    Log.d("ARCREPOSITORY", "FODEU");
-                }
-                Log.d("ARCREPOSITORY", "" + mDatabase.itemFeedDAO().getAll());
-                Log.d("ARCREPOSITORY", "" + itemFeedList.size());
-                mObservableItemFeedList.postValue(itemFeedList);
-            }
+        mObservableItemFeedList.addSource(mDatabase.itemFeedDAO().getAll(), itemFeedList -> {
+            mObservableItemFeedList.postValue(itemFeedList);
         });
+
     }
 
     public static DataRepository getInstance(final AppDatabase database) {
@@ -61,8 +50,12 @@ public class DataRepository {
         return mDatabase.itemFeedDAO().load(downloadLink);
     }
 
-    public int updateLiveItemUri(String downloadLink, String uri){
+    public int updateLiveItemUri(String downloadLink, String uri) {
         return mDatabase.itemFeedDAO().updateItemFeedUri(downloadLink, uri);
+    }
+
+    public long[] insertAll(List<ItemFeedEntity> itemFeedList) {
+        return mDatabase.itemFeedDAO().insertAll(itemFeedList);
     }
 
 }

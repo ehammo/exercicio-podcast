@@ -103,8 +103,7 @@ public class DownloadXMLService extends IntentService {
                 //getRSSFeed faz o download da lista de episodios
                 itemFeedList = XmlFeedParser.parse(getRssFeed(feed));
 
-                long[] x = ((PodcastApp) getApplicationContext()).getDatabase().itemFeedDAO().insertAll(itemFeedList);
-                Log.d("ARCINSERT", "" + x.length);
+                ((PodcastApp) getApplicationContext()).getRepository().insertAll(itemFeedList);
             } catch (XmlPullParserException e1) {
                 e1.printStackTrace();
             } catch (IOException e1) {

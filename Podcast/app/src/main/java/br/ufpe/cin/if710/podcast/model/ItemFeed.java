@@ -13,6 +13,5 @@ public interface ItemFeed {
     String getUri();
     int getCurrentTime();
 
-    void setUri(String uri);
     void setCurrentTime(int currentTime);
 }
